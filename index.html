@@ -1,198 +1,424 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Painel Irrigação (MQTT)</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Painel Irrigação (HiveMQ + MQTT)</title>
   <style>
-    body{font-family:Arial;margin:20px;background:#f4f4f9}
-    .card{padding:18px;border:1px solid #ddd;border-radius:12px;max-width:980px;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.1)}
-    .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
-    .k{font-weight:bold}
-    .v{font-family:monospace}
-    button{padding:10px 14px;margin:6px 6px 6px 0;cursor:pointer;border:none;border-radius:8px;font-weight:bold}
-    .b1{background:#0d6efd;color:#fff}
-    .b2{background:#198754;color:#fff}
-    .b3{background:#dc3545;color:#fff}
-    input{padding:8px;width:100%;max-width:220px;border:1px solid #ccc;border-radius:8px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:18px;max-width:980px;background:#f6f7fb}
+    h1{margin:0 0 10px 0;font-size:20px}
+    h2{margin:0 0 10px 0;font-size:16px}
+    .small{font-size:12px;color:#666}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .card{border:1px solid #ddd;border-radius:12px;padding:12px 14px;background:#fff;flex:1;min-width:280px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+    label{display:block;font-size:13px;margin:8px 0 4px}
+    input,button{font-size:14px;padding:10px;border-radius:10px;border:1px solid #ccc}
+    button{cursor:pointer;border:none}
+    .btn{background:#0d6efd;color:#fff}
+    .btn2{background:#198754;color:#fff}
+    .btn3{background:#dc3545;color:#fff}
+    .btnGray{background:#6c757d;color:#fff}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     table{border-collapse:collapse;width:100%}
-    th,td{border-bottom:1px solid #eee;padding:8px;font-size:13px;text-align:left;vertical-align:top}
-    .small{color:#666;font-size:12px;margin-top:8px}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eee;font-weight:bold}
+    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;font-size:13px;vertical-align:top}
+    .mono{font-family:ui-monospace,Consolas,monospace}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eee;font-weight:700}
+    .ok{background:#d6f5dd;color:#0a7a2f}
+    .bad{background:#ffe0e0;color:#b00020}
+    pre{background:#0b1020;color:#e8edf7;padding:10px;border-radius:12px;overflow:auto;white-space:pre-wrap}
+    hr{border:none;border-top:1px solid #eee;margin:12px 0}
   </style>
+
+  <!-- mqtt.js -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
+
 <body>
-  <div class="card">
-    <h2>Painel Irrigação (MQTT)</h2>
-
-    <div class="row"><div class="k">Broker</div><div class="v"><span id="mqttState" class="pill">desconectado</span></div></div>
-    <div class="row"><div class="k">Último status</div><div class="v" id="lastStatus">—</div></div>
-
-    <h3>2) Status (igual ao painel do IP)</h3>
-
-    <div class="row"><div class="k">IP</div><div class="v" id="ip">—</div></div>
-    <div class="row"><div class="k">Wi-Fi RSSI</div><div class="v" id="rssi">—</div></div>
-    <div class="row"><div class="k">Modo</div><div class="v" id="mode">—</div></div>
-    <div class="row"><div class="k">Relé</div><div class="v" id="relay">—</div></div>
-    <div class="row"><div class="k">Irrigando</div><div class="v" id="watering">—</div></div>
-    <div class="row"><div class="k">ADC</div><div class="v" id="adcRaw">—</div></div>
-    <div class="row"><div class="k">Estado</div><div class="v" id="moistureState">—</div></div>
-    <div class="row"><div class="k">% (simples)</div><div class="v" id="moisturePct">—</div></div>
-    <div class="row"><div class="k">Threshold</div><div class="v" id="threshold">—</div></div>
-    <div class="row"><div class="k">Leitura (ms)</div><div class="v" id="readMs">—</div></div>
-    <div class="row"><div class="k">Irrigação máx (ms)</div><div class="v" id="irrMs">—</div></div>
-    <div class="row"><div class="k">Estável N</div><div class="v" id="stableN">—</div></div>
-    <div class="row"><div class="k">Acima / Abaixo</div><div class="v" id="ab">—</div></div>
-    <div class="row"><div class="k">Uptime (ms)</div><div class="v" id="uptimeMs">—</div></div>
-
-    <h3>3) Comandos (via MQTT)</h3>
-    <button class="b1" onclick="sendModeAuto()">Modo AUTO</button>
-    <button class="b2" onclick="sendManualOn()">Manual ON</button>
-    <button class="b3" onclick="sendManualOff()">Manual OFF</button>
-
-    <h3>Configuração</h3>
-    <div class="small">Esses valores são enviados em <code>{ "set": {...} }</code> para o tópico <code>/cmd</code>.</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-      <div>
-        <div class="small">Threshold</div>
-        <input id="inThreshold" type="number" min="0" max="4095" />
-      </div>
-      <div>
-        <div class="small">Estável N</div>
-        <input id="inStableN" type="number" min="1" max="20" />
-      </div>
-      <div>
-        <div class="small">Leitura (ms)</div>
-        <input id="inReadMs" type="number" min="200" max="3600000" />
-      </div>
-      <div>
-        <div class="small">Irrigação máx (ms)</div>
-        <input id="inIrrMs" type="number" min="500" max="3600000" />
-      </div>
-    </div>
-    <button class="b1" style="margin-top:10px" onclick="sendConfig()">Salvar configuração</button>
-
-    <h3>Logs (últimas 30)</h3>
-    <table>
-      <thead>
-        <tr><th>#</th><th>Início</th><th>Fim</th><th>Duração</th><th>ADC ini</th><th>ADC fim</th><th>Motivo</th></tr>
-      </thead>
-      <tbody id="logBody"></tbody>
-    </table>
+  <h1>🌿 Painel Irrigação (HiveMQ Cloud + MQTT)</h1>
+  <div class="small">
+    Dispositivo: <b class="mono" id="devLbl">irrigacao01</b> • Base: <b class="mono" id="baseLbl">irrigacao/irrigacao01</b>
   </div>
 
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script>
-    const DEVICE_ID = "irrigacao01";
-    const HOST = "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
-    const MQTT_USER = "COLOQUE_AQUI";
-    const MQTT_PASS = "COLOQUE_AQUI";
+  <div class="row" style="margin-top:12px">
+    <div class="card">
+      <h2>1) Conexão MQTT (WebSocket)</h2>
 
-    const base = `irrigacao/${DEVICE_ID}`;
-    const T_CMD = `${base}/cmd`;
-    const T_ACK = `${base}/ack`;
-    const T_STATUS = `${base}/status`;
-    const T_LOGS = `${base}/logs`;
+      <label>Host (sem porta, sem /mqtt)</label>
+      <input id="host" class="mono" style="width:100%" placeholder="f39...hivemq.cloud"/>
 
-    const client = mqtt.connect(`wss://${HOST}:8884/mqtt`, {
-      username: MQTT_USER,
-      password: MQTT_PASS,
-      clientId: `web-${DEVICE_ID}-` + Math.random().toString(16).slice(2),
-      clean: true,
-      connectTimeout: 8000,
-      reconnectPeriod: 2000
-    });
+      <div class="row">
+        <div style="flex:1;min-width:140px">
+          <label>Porta</label>
+          <input id="port" class="mono" style="width:100%" placeholder="8884"/>
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label>Path</label>
+          <input id="path" class="mono" style="width:100%" placeholder="/mqtt"/>
+        </div>
+      </div>
 
-    function setMqttState(txt){
-      document.getElementById("mqttState").textContent = txt;
+      <div class="row">
+        <div style="flex:1;min-width:160px">
+          <label>Usuário MQTT</label>
+          <input id="user" class="mono" style="width:100%" placeholder="seu usuário"/>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label>Senha MQTT</label>
+          <input id="pass" type="password" class="mono" style="width:100%" placeholder="sua senha"/>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="btn" onclick="connect()">Conectar</button>
+        <button class="btnGray" onclick="disconnect()">Desconectar</button>
+        <span id="state" class="pill bad">desconectado</span>
+      </div>
+
+      <div class="small" style="margin-top:10px">
+        No HiveMQ Cloud normalmente é <b>WSS</b> na porta <b>8884</b> com path <b>/mqtt</b>.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2) Status (igual ao painel do IP)</h2>
+
+      <table>
+        <tr><th>Última atualização</th><td id="lastSeen">—</td></tr>
+        <tr><th>IP</th><td class="mono" id="ip">—</td></tr>
+        <tr><th>Wi-Fi RSSI</th><td id="rssi">—</td></tr>
+        <tr><th>Modo</th><td id="mode">—</td></tr>
+        <tr><th>Relé</th><td id="relay">—</td></tr>
+        <tr><th>Irrigando</th><td id="watering">—</td></tr>
+        <tr><th>ADC</th><td class="mono" id="adcRaw">—</td></tr>
+        <tr><th>Estado</th><td id="moistureState">—</td></tr>
+        <tr><th>% (simples)</th><td id="moisturePct">—</td></tr>
+        <tr><th>Threshold</th><td class="mono" id="thrNow">—</td></tr>
+        <tr><th>Leitura (ms)</th><td class="mono" id="readMsNow">—</td></tr>
+        <tr><th>Irrigação máx (ms)</th><td class="mono" id="irrMsNow">—</td></tr>
+        <tr><th>Estável N</th><td class="mono" id="stableNNow">—</td></tr>
+        <tr><th>Acima / Abaixo</th><td class="mono" id="counts">—</td></tr>
+        <tr><th>Uptime (ms)</th><td class="mono" id="uptime">—</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <div class="card">
+      <h2>3) Comandos (via MQTT)</h2>
+      <div class="btns">
+        <button class="btn" onclick="cmdAuto()">Modo AUTO</button>
+        <button class="btn2" onclick="cmdManualOn()">Manual ON</button>
+        <button class="btn3" onclick="cmdManualOff()">Manual OFF</button>
+        <button class="btnGray" onclick="cmdPing()">Ping</button>
+      </div>
+
+      <hr/>
+
+      <h2>Configuração</h2>
+      <div class="row">
+        <div style="flex:1;min-width:150px">
+          <label>Threshold (0–4095)</label>
+          <input id="inThr" class="mono" type="number" min="0" max="4095" placeholder="1900"/>
+        </div>
+        <div style="flex:1;min-width:150px">
+          <label>Leitura (min)</label>
+          <input id="inReadMin" class="mono" type="number" min="1" max="1440" placeholder="30"/>
+        </div>
+        <div style="flex:1;min-width:150px">
+          <label>Irrigação (min)</label>
+          <input id="inIrrMin" class="mono" type="number" min="1" max="60" placeholder="5"/>
+        </div>
+        <div style="flex:1;min-width:150px">
+          <label>Estável N (1–20)</label>
+          <input id="inStableN" class="mono" type="number" min="1" max="20" placeholder="3"/>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="btn" onclick="cmdSaveCfg()">Salvar Config</button>
+      </div>
+
+      <div class="small" style="margin-top:10px">
+        Tópicos usados: <span class="mono" id="topicsLbl">—</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4) Logs (últimas 30)</h2>
+      <div class="small">Vem do tópico <span class="mono" id="logsTopicLbl">—</span> (retained).</div>
+
+      <table style="margin-top:8px">
+        <thead>
+          <tr>
+            <th>#</th><th>Início</th><th>Fim</th><th>Motivo</th><th>ADC ini→fim</th>
+          </tr>
+        </thead>
+        <tbody id="logsBody"></tbody>
+      </table>
+
+      <hr/>
+
+      <h2>Debug</h2>
+      <pre id="dbg">—</pre>
+    </div>
+  </div>
+
+<script>
+  // ======= AJUSTES FIXOS =======
+  const DEVICE_ID = "irrigacao01";
+  const DEFAULT_HOST = "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
+  const DEFAULT_PORT = "8884";
+  const DEFAULT_PATH = "/mqtt";
+
+  const BASE = `irrigacao/${DEVICE_ID}`;
+  const T_CMD    = `${BASE}/cmd`;
+  const T_ACK    = `${BASE}/ack`;
+  const T_STATUS = `${BASE}/status`;
+  const T_LOGS   = `${BASE}/logs`;
+
+  document.getElementById("devLbl").textContent = DEVICE_ID;
+  document.getElementById("baseLbl").textContent = BASE;
+  document.getElementById("topicsLbl").textContent = `${T_STATUS} • ${T_LOGS} • ${T_ACK} • (cmd→ ${T_CMD})`;
+  document.getElementById("logsTopicLbl").textContent = T_LOGS;
+
+  // ======= UI helpers =======
+  function setPill(ok, txt){
+    const el = document.getElementById("state");
+    el.textContent = txt;
+    el.className = "pill " + (ok ? "ok" : "bad");
+  }
+  function setText(id, v){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = (v === undefined || v === null) ? "—" : String(v);
+  }
+  function dbg(msg){
+    const el = document.getElementById("dbg");
+    const t = new Date().toLocaleString("pt-BR");
+    const line = `[${t}] ${msg}\n`;
+    el.textContent = (el.textContent === "—" ? "" : el.textContent);
+    el.textContent = line + el.textContent;
+    console.log(msg);
+  }
+
+  // ======= load saved fields =======
+  function loadFields(){
+    document.getElementById("host").value = localStorage.getItem("mqtt_host") || DEFAULT_HOST;
+    document.getElementById("port").value = localStorage.getItem("mqtt_port") || DEFAULT_PORT;
+    document.getElementById("path").value = localStorage.getItem("mqtt_path") || DEFAULT_PATH;
+    document.getElementById("user").value = localStorage.getItem("mqtt_user") || "";
+    document.getElementById("pass").value = localStorage.getItem("mqtt_pass") || "";
+  }
+  loadFields();
+
+  let client = null;
+  let lastStatusAt = 0;
+
+  function connect(){
+    const host = (document.getElementById("host").value || "").trim();
+    const port = (document.getElementById("port").value || "").trim();
+    const path = (document.getElementById("path").value || "/mqtt").trim();
+    const user = (document.getElementById("user").value || "").trim();
+    const pass = (document.getElementById("pass").value || "");
+
+    // salva (local)
+    localStorage.setItem("mqtt_host", host);
+    localStorage.setItem("mqtt_port", port);
+    localStorage.setItem("mqtt_path", path);
+    localStorage.setItem("mqtt_user", user);
+    localStorage.setItem("mqtt_pass", pass);
+
+    if(!host){
+      alert("Preencha o Host (ex.: f39...hivemq.cloud).");
+      return;
     }
+
+    // evita erro comum: host colado com :8884/mqtt
+    if(host.includes("/") || host.includes(":")){
+      alert("No campo Host coloque SOMENTE o domínio, sem porta e sem /mqtt.\nExemplo: f39...hivemq.cloud");
+      return;
+    }
+
+    const url = `wss://${host}:${port}${path}`;
+    const clientId = `web-${DEVICE_ID}-${Math.random().toString(16).slice(2)}`;
+
+    dbg(`Conectando em ${url}`);
+    setPill(false, "conectando...");
+
+    // fecha conexão anterior
+    if(client){
+      try{ client.end(true); }catch(e){}
+      client = null;
+    }
+
+    client = mqtt.connect(url, {
+      clientId,
+      username: user || undefined,
+      password: pass || undefined,
+      protocolVersion: 4,   // MQTT 3.1.1
+      clean: true,
+      keepalive: 30,
+      reconnectPeriod: 2000,
+      connectTimeout: 10000
+    });
 
     client.on("connect", () => {
-      setMqttState("conectado");
-      client.subscribe([T_STATUS, T_LOGS, T_ACK], { qos: 0 });
+      setPill(true, "conectado");
+      dbg("✅ CONNECT");
+
+      client.subscribe([T_STATUS, T_LOGS, T_ACK], { qos: 0 }, (err) => {
+        if(err) dbg("❌ SUB error: " + err.message);
+        else dbg("📡 Subscribed: status/logs/ack");
+      });
+
+      // ping para confirmar ida/volta
+      cmdPing();
     });
 
-    client.on("reconnect", () => setMqttState("reconectando..."));
-    client.on("close", () => setMqttState("desconectado"));
-    client.on("error", () => setMqttState("erro"));
-
-    function setText(id, v){ document.getElementById(id).textContent = (v === undefined || v === null) ? "—" : v; }
-
-    function applyStatus(s){
-      const now = new Date();
-      setText("lastStatus", now.toLocaleString("pt-BR"));
-      setText("ip", s.ip);
-      setText("rssi", s.rssi);
-      setText("mode", s.mode);
-      setText("relay", s.relay);
-      setText("watering", s.watering);
-      setText("adcRaw", s.adcRaw);
-      setText("moistureState", s.moistureState);
-      setText("moisturePct", s.moisturePct);
-      setText("threshold", s.threshold);
-      setText("readMs", s.readMs);
-      setText("irrMs", s.irrMs);
-      setText("stableN", s.stableN);
-      setText("ab", `${s.aboveCount} / ${s.belowCount}`);
-      setText("uptimeMs", s.uptimeMs);
-
-      // Preenche inputs (se estiverem vazios)
-      if (!document.getElementById("inThreshold").value) document.getElementById("inThreshold").value = s.threshold ?? "";
-      if (!document.getElementById("inStableN").value) document.getElementById("inStableN").value = s.stableN ?? "";
-      if (!document.getElementById("inReadMs").value) document.getElementById("inReadMs").value = s.readMs ?? "";
-      if (!document.getElementById("inIrrMs").value) document.getElementById("inIrrMs").value = s.irrMs ?? "";
-    }
-
-    function applyLogs(L){
-      const body = document.getElementById("logBody");
-      body.innerHTML = "";
-      const items = (L && L.items) ? L.items : [];
-      for(let i=0;i<items.length;i++){
-        const it = items[i];
-        const tr = document.createElement("tr");
-        tr.innerHTML =
-          `<td>${i+1}</td>`+
-          `<td>${it.start ?? ""}</td>`+
-          `<td>${it.end ?? ""}</td>`+
-          `<td>${it.durMs ?? ""}</td>`+
-          `<td>${it.startAdc ?? ""}</td>`+
-          `<td>${it.endAdc ?? ""}</td>`+
-          `<td>${it.stopReason ?? ""}</td>`;
-        body.appendChild(tr);
-      }
-    }
+    client.on("reconnect", () => { setPill(false, "reconectando..."); dbg("↩️ RECONNECT"); });
+    client.on("close", () => { setPill(false, "desconectado"); dbg("🔌 CLOSE"); });
+    client.on("offline", () => { setPill(false, "offline"); dbg("📴 OFFLINE"); });
+    client.on("error", (e) => { setPill(false, "erro"); dbg("❌ ERROR: " + (e?.message || e)); });
 
     client.on("message", (topic, payload) => {
-      try{
-        const txt = payload.toString();
-        if(topic === T_STATUS){
-          applyStatus(JSON.parse(txt));
-        } else if(topic === T_LOGS){
-          applyLogs(JSON.parse(txt));
-        } else if(topic === T_ACK){
-          // opcional: você pode exibir o ACK em algum lugar
-          // console.log("ACK:", txt);
+      const txt = payload.toString();
+
+      if(topic === T_STATUS){
+        try{
+          const s = JSON.parse(txt);
+          lastStatusAt = Date.now();
+          setText("lastSeen", new Date().toLocaleString("pt-BR"));
+
+          setText("ip", s.ip);
+          setText("rssi", s.rssi);
+          setText("mode", translateMode(s.mode));
+          setText("relay", s.relay === "on" ? "LIGADO" : "DESLIGADO");
+          setText("watering", s.watering ? "SIM" : "NÃO");
+          setText("adcRaw", s.adcRaw);
+          setText("moistureState", translateState(s.moistureState));
+          setText("moisturePct", (s.moisturePct ?? "—") + "%");
+          setText("thrNow", s.threshold);
+          setText("readMsNow", s.readMs);
+          setText("irrMsNow", s.irrMs);
+          setText("stableNNow", s.stableN);
+          setText("counts", `${s.aboveCount ?? "—"} / ${s.belowCount ?? "—"}`);
+          setText("uptime", s.uptimeMs);
+
+          // preenche inputs se vazios
+          if(!document.getElementById("inThr").value && s.threshold != null) document.getElementById("inThr").value = s.threshold;
+          if(!document.getElementById("inStableN").value && s.stableN != null) document.getElementById("inStableN").value = s.stableN;
+          if(!document.getElementById("inReadMin").value && s.readMs != null) document.getElementById("inReadMin").value = Math.round(s.readMs/60000);
+          if(!document.getElementById("inIrrMin").value && s.irrMs != null) document.getElementById("inIrrMin").value = Math.round(s.irrMs/60000);
+
+        }catch(e){
+          dbg("❌ STATUS JSON inválido: " + e.message);
         }
-      }catch(e){
-        // console.log("parse err", e);
+        return;
+      }
+
+      if(topic === T_LOGS){
+        try{
+          const L = JSON.parse(txt);
+          renderLogs(L);
+        }catch(e){
+          dbg("❌ LOGS JSON inválido: " + e.message);
+        }
+        return;
+      }
+
+      if(topic === T_ACK){
+        dbg("ACK: " + txt);
       }
     });
+  }
 
-    function pub(obj){
-      client.publish(T_CMD, JSON.stringify(obj), { qos: 0, retain: false });
+  function disconnect(){
+    if(client){
+      try{ client.end(true); }catch(e){}
+      client = null;
     }
+    setPill(false, "desconectado");
+  }
 
-    function sendModeAuto(){ pub({ mode: "AUTO" }); }
-    function sendManualOn(){ pub({ manual: "ON" }); }
-    function sendManualOff(){ pub({ manual: "OFF" }); }
-
-    function sendConfig(){
-      const threshold = parseInt(document.getElementById("inThreshold").value || "0", 10);
-      const stableN = parseInt(document.getElementById("inStableN").value || "3", 10);
-      const readMs = parseInt(document.getElementById("inReadMs").value || "60000", 10);
-      const irrMs = parseInt(document.getElementById("inIrrMs").value || "300000", 10);
-      pub({ set: { threshold, stableN, readMs, irrMs } });
+  function publishCmd(obj){
+    if(!client || !client.connected){
+      alert("MQTT não está conectado.");
+      return;
     }
-  </script>
+    const msg = JSON.stringify(obj);
+    client.publish(T_CMD, msg, { qos: 0, retain: false });
+    dbg("CMD → " + msg);
+  }
+
+  function cmdAuto(){ publishCmd({ mode: "AUTO" }); }
+  function cmdManualOn(){ publishCmd({ manual: "ON" }); }
+  function cmdManualOff(){ publishCmd({ manual: "OFF" }); }
+  function cmdPing(){ publishCmd({ ping: 1 }); }
+
+  function cmdSaveCfg(){
+    const thr = parseInt(document.getElementById("inThr").value || "1900", 10);
+    const readMin = parseInt(document.getElementById("inReadMin").value || "30", 10);
+    const irrMin  = parseInt(document.getElementById("inIrrMin").value || "5", 10);
+    const stableN = parseInt(document.getElementById("inStableN").value || "3", 10);
+
+    const readMs = Math.max(10_000, Math.min(24*60*60*1000, readMin*60_000));
+    const irrMs  = Math.max(5_000, Math.min(60*60*1000, irrMin*60_000));
+
+    publishCmd({ set: { threshold: thr, readMs, irrMs, stableN } });
+  }
+
+  function translateMode(m){
+    if(m === "auto") return "AUTO";
+    if(m === "on") return "MANUAL (ON)";
+    if(m === "off") return "MANUAL (OFF)";
+    return m ?? "—";
+  }
+  function translateState(s){
+    if(s === "seco") return "SECO";
+    if(s === "molhado") return "MOLHADO";
+    if(s === "limite") return "NO LIMITE";
+    return s ?? "—";
+  }
+
+  function renderLogs(L){
+    const body = document.getElementById("logsBody");
+    body.innerHTML = "";
+    const items = (L && L.items) ? L.items : [];
+
+    for(let i=0;i<items.length;i++){
+      const it = items[i];
+      const tr = document.createElement("tr");
+      const start = fmtEpoch(it.startEpoch);
+      const end   = fmtEpoch(it.endEpoch);
+      const reason = translateReason(it.stopReason);
+      const adc = `${it.startAdc ?? "—"} → ${it.endAdc ?? "—"}`;
+      tr.innerHTML = `<td>${i+1}</td><td>${start}</td><td>${end}</td><td>${reason}</td><td class="mono">${adc}</td>`;
+      body.appendChild(tr);
+    }
+  }
+
+  function fmtEpoch(e){
+    if(!e || e === 0) return "—";
+    return new Date(e*1000).toLocaleString("pt-BR");
+  }
+  function translateReason(r){
+    if(r === 1) return "Parou: molhou";
+    if(r === 2) return "Parou: tempo máx";
+    if(r === 3) return "Parou: forçado";
+    return r ?? "—";
+  }
+
+  // se ficar muito tempo sem status, mostra no debug
+  setInterval(() => {
+    if(!lastStatusAt) return;
+    const dt = Date.now() - lastStatusAt;
+    if(dt > 15000){
+      // só avisa uma vez a cada 15s
+      // (não muda a tela, só facilita diagnóstico)
+      dbg("⚠️ Sem status há " + Math.round(dt/1000) + "s (ESP32 pode estar offline no MQTT ou não publicando /status).");
+      lastStatusAt = Date.now(); // evita spam
+    }
+  }, 15000);
+</script>
 </body>
 </html>
