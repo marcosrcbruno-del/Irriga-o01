@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel Irrigação (HiveMQ)</title>
+  <style>
+    body{font-family:system-ui,Arial;margin:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+    input,button{padding:10px}
+    button{cursor:pointer}
+    .card{border:1px solid #ddd;border-radius:12px;padding:12px;margin:10px 0}
+    #log{white-space:pre-wrap;background:#f5f5f5;border-radius:10px;padding:12px;height:360px;overflow:auto}
+    .small{color:#666;font-size:12px}
+  </style>
+</head>
+<body>
+  <h2>Painel — irrigacao01</h2>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="small">URL (WSS)</div>
+        <input id="url" size="66" value="wss://f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud:8884/mqtt">
+      </div>
+      <div>
+        <div class="small">Usuário</div>
+        <input id="user" placeholder="seu user HiveMQ">
+      </div>
+      <div>
+        <div class="small">Senha</div>
+        <input id="pass" type="password" placeholder="sua senha HiveMQ">
+      </div>
+      <button id="btnConnect">Conectar</button>
+      <span id="status" class="small">desconectado</span>
+    </div>
+    <div class="small">Browser usa WebSocket seguro (WSS) na porta 8884. :contentReference[oaicite:1]{index=1}</div>
+  </div>
+
+  <div class="card">
+    <h3>Comandos</h3>
+    <div class="row">
+      <div>
+        <div class="small">threshold</div>
+        <input id="threshold" type="number" value="2600">
+      </div>
+      <div>
+        <div class="small">readMs</div>
+        <input id="readMs" type="number" value="60000">
+      </div>
+      <div>
+        <div class="small">stableN</div>
+        <input id="stableN" type="number" value="3">
+      </div>
+      <button id="btnSendCfg">Enviar config</button>
+      <button id="btnAuto">AUTO</button>
+      <button id="btnOn">MANUAL ON</button>
+      <button id="btnOff">MANUAL OFF</button>
+    </div>
+    <div class="small" id="lastAck"></div>
+  </div>
+
+  <div class="card">
+    <h3>Logs (tempo real)</h3>
+    <div id="log"></div>
+  </div>
+
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    const DEVICE_ID = "irrigacao01";
+    const tLog = `irrigacao/${DEVICE_ID}/log`;
+    const tAck = `irrigacao/${DEVICE_ID}/ack`;
+    const tCmd = `irrigacao/${DEVICE_ID}/cmd`;
+
+    let client = null;
+
+    function addLine(s){
+      const el = document.getElementById("log");
+      el.textContent += s + "\n";
+      el.scrollTop = el.scrollHeight;
+    }
+    function setStatus(s){ document.getElementById("status").textContent = s; }
+
+    function publishCmd(obj, retain=false){
+      if(!client) return;
+      const payload = JSON.stringify(obj);
+      client.publish(tCmd, payload, { qos: 1, retain });
+      addLine(`[CMD] ${payload}`);
+    }
+
+    document.getElementById("btnConnect").onclick = () => {
+      const url = document.getElementById("url").value.trim();
+      const username = document.getElementById("user").value.trim();
+      const password = document.getElementById("pass").value;
+
+      const clientId = "web-" + DEVICE_ID + "-" + Math.random().toString(16).slice(2);
+
+      client = mqtt.connect(url, {
+        username, password, clientId,
+        keepalive: 30, reconnectPeriod: 2000, clean: true
+      });
+
+      setStatus("conectando...");
+
+      client.on("connect", () => {
+        setStatus("conectado ✅");
+        client.subscribe([tLog, tAck], { qos: 1 });
+        addLine(`[SYS] subscribed: ${tLog}, ${tAck}`);
+      });
+
+      client.on("reconnect", () => setStatus("reconectando..."));
+      client.on("close", () => setStatus("desconectado"));
+      client.on("error", (e) => addLine("[ERRO] " + e.message));
+
+      client.on("message", (topic, payload) => {
+        const text = payload.toString();
+        if(topic === tAck) document.getElementById("lastAck").textContent = "ACK: " + text;
+        addLine(`[${topic}] ${text}`);
+      });
+    };
+
+    document.getElementById("btnSendCfg").onclick = () => {
+      const threshold = Number(document.getElementById("threshold").value);
+      const readMs    = Number(document.getElementById("readMs").value);
+      const stableN   = Number(document.getElementById("stableN").value);
+
+      // retain=true faz o ESP32 receber a última config ao reconectar
+      publishCmd({ set: { threshold, readMs, stableN } }, true);
+    };
+
+    document.getElementById("btnAuto").onclick = () => publishCmd({ mode: "AUTO" }, true);
+    document.getElementById("btnOn").onclick   = () => publishCmd({ manual: "ON" }, false);
+    document.getElementById("btnOff").onclick  = () => publishCmd({ manual: "OFF" }, false);
+  </script>
+</body>
+</html>
