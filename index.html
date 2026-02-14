@@ -1,390 +1,198 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Painel Irrigação (MQTT)</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:18px;max-width:980px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .card{border:1px solid #ddd;border-radius:10px;padding:12px 14px;flex:1;min-width:280px}
-    h1{margin:0 0 10px 0;font-size:20px}
-    h2{margin:0 0 10px 0;font-size:16px}
-    label{display:block;font-size:13px;margin:8px 0 4px}
-    input,select,button{font-size:14px;padding:8px;border-radius:8px;border:1px solid #ccc}
-    button{cursor:pointer}
-    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .ok{color:#0a7a2f;font-weight:600}
-    .bad{color:#b00020;font-weight:600}
-    pre{background:#0b1020;color:#e8edf7;padding:10px;border-radius:10px;overflow:auto}
+    body{font-family:Arial;margin:20px;background:#f4f4f9}
+    .card{padding:18px;border:1px solid #ddd;border-radius:12px;max-width:980px;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+    .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
+    .k{font-weight:bold}
+    .v{font-family:monospace}
+    button{padding:10px 14px;margin:6px 6px 6px 0;cursor:pointer;border:none;border-radius:8px;font-weight:bold}
+    .b1{background:#0d6efd;color:#fff}
+    .b2{background:#198754;color:#fff}
+    .b3{background:#dc3545;color:#fff}
+    input{padding:8px;width:100%;max-width:220px;border:1px solid #ccc;border-radius:8px}
     table{border-collapse:collapse;width:100%}
-    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;font-size:13px}
-    .mono{font-family:ui-monospace,Consolas,monospace}
-    .small{font-size:12px;color:#666}
+    th,td{border-bottom:1px solid #eee;padding:8px;font-size:13px;text-align:left;vertical-align:top}
+    .small{color:#666;font-size:12px;margin-top:8px}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eee;font-weight:bold}
   </style>
-
-  <!-- mqtt.js via CDN -->
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 <body>
-  <h1>🌿 Painel de Irrigação (HiveMQ + MQTT)</h1>
-  <div class="small">
-    Dispositivo: <b class="mono" id="devIdLbl">irrigacao01</b> •
-    Base de tópicos: <b class="mono" id="baseLbl">irrigacao/irrigacao01</b>
+  <div class="card">
+    <h2>Painel Irrigação (MQTT)</h2>
+
+    <div class="row"><div class="k">Broker</div><div class="v"><span id="mqttState" class="pill">desconectado</span></div></div>
+    <div class="row"><div class="k">Último status</div><div class="v" id="lastStatus">—</div></div>
+
+    <h3>2) Status (igual ao painel do IP)</h3>
+
+    <div class="row"><div class="k">IP</div><div class="v" id="ip">—</div></div>
+    <div class="row"><div class="k">Wi-Fi RSSI</div><div class="v" id="rssi">—</div></div>
+    <div class="row"><div class="k">Modo</div><div class="v" id="mode">—</div></div>
+    <div class="row"><div class="k">Relé</div><div class="v" id="relay">—</div></div>
+    <div class="row"><div class="k">Irrigando</div><div class="v" id="watering">—</div></div>
+    <div class="row"><div class="k">ADC</div><div class="v" id="adcRaw">—</div></div>
+    <div class="row"><div class="k">Estado</div><div class="v" id="moistureState">—</div></div>
+    <div class="row"><div class="k">% (simples)</div><div class="v" id="moisturePct">—</div></div>
+    <div class="row"><div class="k">Threshold</div><div class="v" id="threshold">—</div></div>
+    <div class="row"><div class="k">Leitura (ms)</div><div class="v" id="readMs">—</div></div>
+    <div class="row"><div class="k">Irrigação máx (ms)</div><div class="v" id="irrMs">—</div></div>
+    <div class="row"><div class="k">Estável N</div><div class="v" id="stableN">—</div></div>
+    <div class="row"><div class="k">Acima / Abaixo</div><div class="v" id="ab">—</div></div>
+    <div class="row"><div class="k">Uptime (ms)</div><div class="v" id="uptimeMs">—</div></div>
+
+    <h3>3) Comandos (via MQTT)</h3>
+    <button class="b1" onclick="sendModeAuto()">Modo AUTO</button>
+    <button class="b2" onclick="sendManualOn()">Manual ON</button>
+    <button class="b3" onclick="sendManualOff()">Manual OFF</button>
+
+    <h3>Configuração</h3>
+    <div class="small">Esses valores são enviados em <code>{ "set": {...} }</code> para o tópico <code>/cmd</code>.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      <div>
+        <div class="small">Threshold</div>
+        <input id="inThreshold" type="number" min="0" max="4095" />
+      </div>
+      <div>
+        <div class="small">Estável N</div>
+        <input id="inStableN" type="number" min="1" max="20" />
+      </div>
+      <div>
+        <div class="small">Leitura (ms)</div>
+        <input id="inReadMs" type="number" min="200" max="3600000" />
+      </div>
+      <div>
+        <div class="small">Irrigação máx (ms)</div>
+        <input id="inIrrMs" type="number" min="500" max="3600000" />
+      </div>
+    </div>
+    <button class="b1" style="margin-top:10px" onclick="sendConfig()">Salvar configuração</button>
+
+    <h3>Logs (últimas 30)</h3>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Início</th><th>Fim</th><th>Duração</th><th>ADC ini</th><th>ADC fim</th><th>Motivo</th></tr>
+      </thead>
+      <tbody id="logBody"></tbody>
+    </table>
   </div>
 
-  <div class="row" style="margin-top:12px">
-    <div class="card">
-      <h2>1) Conexão MQTT (WebSocket)</h2>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    const DEVICE_ID = "irrigacao01";
+    const HOST = "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
+    const MQTT_USER = "COLOQUE_AQUI";
+    const MQTT_PASS = "COLOQUE_AQUI";
 
-      <label>Host (HiveMQ Cloud)</label>
-      <input id="host" class="mono" style="width:100%" placeholder="f39...hivemq.cloud"/>
+    const base = `irrigacao/${DEVICE_ID}`;
+    const T_CMD = `${base}/cmd`;
+    const T_ACK = `${base}/ack`;
+    const T_STATUS = `${base}/status`;
+    const T_LOGS = `${base}/logs`;
 
-      <div class="row">
-        <div style="flex:1;min-width:160px">
-          <label>Porta</label>
-          <input id="port" class="mono" style="width:100%" placeholder="8884"/>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label>Path</label>
-          <input id="path" class="mono" style="width:100%" placeholder="/mqtt"/>
-        </div>
-      </div>
-
-      <div class="row">
-        <div style="flex:1;min-width:160px">
-          <label>Usuário</label>
-          <input id="user" class="mono" style="width:100%" placeholder="seu usuário"/>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label>Senha</label>
-          <input id="pass" type="password" class="mono" style="width:100%" placeholder="sua senha"/>
-        </div>
-      </div>
-
-      <div class="btns">
-        <button onclick="connect()">Conectar</button>
-        <button onclick="disconnect()">Desconectar</button>
-        <span id="connState" class="bad">Desconectado</span>
-      </div>
-
-      <div class="small" style="margin-top:10px">
-        Use <b>WSS</b> (WebSocket seguro). No HiveMQ Cloud normalmente é <b>porta 8884</b> com path <b>/mqtt</b>.
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>2) Status (igual ao painel do IP)</h2>
-      <table>
-        <tr><th>IP</th><td class="mono" id="ip">—</td></tr>
-        <tr><th>Wi-Fi RSSI</th><td id="rssi">—</td></tr>
-        <tr><th>Modo</th><td id="mode">—</td></tr>
-        <tr><th>Relé</th><td id="relay">—</td></tr>
-        <tr><th>Irrigando</th><td id="watering">—</td></tr>
-        <tr><th>ADC</th><td class="mono" id="adcRaw">—</td></tr>
-        <tr><th>Estado</th><td id="moistureState">—</td></tr>
-        <tr><th>% (simples)</th><td id="moisturePct">—</td></tr>
-        <tr><th>Threshold</th><td class="mono" id="thrNow">—</td></tr>
-        <tr><th>Leitura (ms)</th><td class="mono" id="readMsNow">—</td></tr>
-        <tr><th>Irrigação máx (ms)</th><td class="mono" id="irrMsNow">—</td></tr>
-        <tr><th>Estável N</th><td class="mono" id="stableNNow">—</td></tr>
-        <tr><th>Acima / Abaixo</th><td class="mono" id="counts">—</td></tr>
-        <tr><th>Uptime (ms)</th><td class="mono" id="uptime">—</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <div class="row" style="margin-top:12px">
-    <div class="card">
-      <h2>3) Comandos (via MQTT)</h2>
-
-      <div class="btns">
-        <button onclick="setModeAuto()">Modo AUTO</button>
-        <button onclick="manualOn()">Manual ON</button>
-        <button onclick="manualOff()">Manual OFF</button>
-      </div>
-
-      <hr style="border:none;border-top:1px solid #eee;margin:12px 0">
-
-      <h2 style="margin-top:0">Configuração</h2>
-      <div class="row">
-        <div style="flex:1;min-width:160px">
-          <label>Threshold (0–4095)</label>
-          <input id="threshold" class="mono" style="width:100%" placeholder="1900"/>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label>Leitura (min)</label>
-          <input id="readMin" class="mono" style="width:100%" placeholder="30"/>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label>Irrigação (min)</label>
-          <input id="irrMin" class="mono" style="width:100%" placeholder="5"/>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label>Estável N (1–20)</label>
-          <input id="stableN" class="mono" style="width:100%" placeholder="3"/>
-        </div>
-      </div>
-
-      <div class="btns">
-        <button onclick="saveCfg()">Salvar Config</button>
-        <button onclick="requestPing()">Ping (ACK)</button>
-      </div>
-
-      <div class="small" style="margin-top:10px">
-        A página envia JSON em <span class="mono">irrigacao/irrigacao01/cmd</span> e recebe:
-        <span class="mono">…/status</span>, <span class="mono">…/logs</span> e <span class="mono">…/ack</span>.
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>4) Logs de Irrigação (30 últimas)</h2>
-      <div class="small">Vem do tópico <span class="mono">…/logs</span> (retained) e atualiza em tempo real.</div>
-      <table id="logsTbl" style="margin-top:8px">
-        <thead>
-          <tr>
-            <th>Início</th><th>Fim</th><th>Motivo</th><th>ADC (ini→fim)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-      <hr style="border:none;border-top:1px solid #eee;margin:12px 0">
-
-      <h2>ACK / Debug</h2>
-      <pre id="dbg">—</pre>
-    </div>
-  </div>
-
-<script>
-  const DEVICE_ID = "irrigacao01";
-  const BASE = `irrigacao/${DEVICE_ID}`;
-  const TOPIC_CMD   = `${BASE}/cmd`;
-  const TOPIC_ACK   = `${BASE}/ack`;
-  const TOPIC_STATUS= `${BASE}/status`;
-  const TOPIC_LOGS  = `${BASE}/logs`;
-
-  document.getElementById("devIdLbl").textContent = DEVICE_ID;
-  document.getElementById("baseLbl").textContent = BASE;
-
-  let client = null;
-  let lastStatus = null;
-
-  // defaults do seu cluster (você pode deixar preenchido)
-  const defaults = {
-    host: "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud",
-    port: "8884",
-    path: "/mqtt"
-  };
-
-  // load localStorage
-  function loadSaved() {
-    document.getElementById("host").value = localStorage.getItem("mqtt_host") || defaults.host;
-    document.getElementById("port").value = localStorage.getItem("mqtt_port") || defaults.port;
-    document.getElementById("path").value = localStorage.getItem("mqtt_path") || defaults.path;
-    document.getElementById("user").value = localStorage.getItem("mqtt_user") || "";
-    document.getElementById("pass").value = localStorage.getItem("mqtt_pass") || "";
-  }
-  loadSaved();
-
-  function setConn(ok, msg){
-    const el = document.getElementById("connState");
-    el.textContent = msg;
-    el.className = ok ? "ok" : "bad";
-  }
-
-  function logDbg(obj){
-    const el = document.getElementById("dbg");
-    const t = new Date().toLocaleString();
-    el.textContent = `[${t}] ${typeof obj === "string" ? obj : JSON.stringify(obj, null, 2)}\n\n` + el.textContent;
-  }
-
-  function connect(){
-    const host = document.getElementById("host").value.trim();
-    const port = document.getElementById("port").value.trim();
-    const path = document.getElementById("path").value.trim() || "/mqtt";
-    const user = document.getElementById("user").value.trim();
-    const pass = document.getElementById("pass").value;
-
-    localStorage.setItem("mqtt_host", host);
-    localStorage.setItem("mqtt_port", port);
-    localStorage.setItem("mqtt_path", path);
-    localStorage.setItem("mqtt_user", user);
-    localStorage.setItem("mqtt_pass", pass);
-
-    const url = `wss://${host}:${port}${path}`;
-    const clientId = `web-${DEVICE_ID}-${Math.random().toString(16).slice(2)}`;
-
-    setConn(false, "Conectando...");
-    logDbg(`Conectando em ${url} ...`);
-
-    client = mqtt.connect(url, {
-      clientId,
-      username: user || undefined,
-      password: pass || undefined,
-      keepalive: 30,
+    const client = mqtt.connect(`wss://${HOST}:8884/mqtt`, {
+      username: MQTT_USER,
+      password: MQTT_PASS,
+      clientId: `web-${DEVICE_ID}-` + Math.random().toString(16).slice(2),
       clean: true,
-      reconnectPeriod: 2000,
-      connectTimeout: 10_000
+      connectTimeout: 8000,
+      reconnectPeriod: 2000
     });
+
+    function setMqttState(txt){
+      document.getElementById("mqttState").textContent = txt;
+    }
 
     client.on("connect", () => {
-      setConn(true, "Conectado");
-      logDbg("✅ Conectado!");
-
-      client.subscribe([TOPIC_STATUS, TOPIC_LOGS, TOPIC_ACK], { qos: 0 }, (err) => {
-        if (err) logDbg({subErr: err.message});
-        else logDbg(`📡 Inscrito em: ${TOPIC_STATUS}, ${TOPIC_LOGS}, ${TOPIC_ACK}`);
-      });
-
-      // pede um ACK só pra confirmar ida/volta
-      requestPing();
+      setMqttState("conectado");
+      client.subscribe([T_STATUS, T_LOGS, T_ACK], { qos: 0 });
     });
 
-    client.on("reconnect", () => setConn(false, "Reconectando..."));
-    client.on("close", () => setConn(false, "Desconectado"));
-    client.on("error", (e) => logDbg({mqttError: e.message}));
+    client.on("reconnect", () => setMqttState("reconectando..."));
+    client.on("close", () => setMqttState("desconectado"));
+    client.on("error", () => setMqttState("erro"));
+
+    function setText(id, v){ document.getElementById(id).textContent = (v === undefined || v === null) ? "—" : v; }
+
+    function applyStatus(s){
+      const now = new Date();
+      setText("lastStatus", now.toLocaleString("pt-BR"));
+      setText("ip", s.ip);
+      setText("rssi", s.rssi);
+      setText("mode", s.mode);
+      setText("relay", s.relay);
+      setText("watering", s.watering);
+      setText("adcRaw", s.adcRaw);
+      setText("moistureState", s.moistureState);
+      setText("moisturePct", s.moisturePct);
+      setText("threshold", s.threshold);
+      setText("readMs", s.readMs);
+      setText("irrMs", s.irrMs);
+      setText("stableN", s.stableN);
+      setText("ab", `${s.aboveCount} / ${s.belowCount}`);
+      setText("uptimeMs", s.uptimeMs);
+
+      // Preenche inputs (se estiverem vazios)
+      if (!document.getElementById("inThreshold").value) document.getElementById("inThreshold").value = s.threshold ?? "";
+      if (!document.getElementById("inStableN").value) document.getElementById("inStableN").value = s.stableN ?? "";
+      if (!document.getElementById("inReadMs").value) document.getElementById("inReadMs").value = s.readMs ?? "";
+      if (!document.getElementById("inIrrMs").value) document.getElementById("inIrrMs").value = s.irrMs ?? "";
+    }
+
+    function applyLogs(L){
+      const body = document.getElementById("logBody");
+      body.innerHTML = "";
+      const items = (L && L.items) ? L.items : [];
+      for(let i=0;i<items.length;i++){
+        const it = items[i];
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td>${i+1}</td>`+
+          `<td>${it.start ?? ""}</td>`+
+          `<td>${it.end ?? ""}</td>`+
+          `<td>${it.durMs ?? ""}</td>`+
+          `<td>${it.startAdc ?? ""}</td>`+
+          `<td>${it.endAdc ?? ""}</td>`+
+          `<td>${it.stopReason ?? ""}</td>`;
+        body.appendChild(tr);
+      }
+    }
 
     client.on("message", (topic, payload) => {
-      const txt = payload.toString();
-      if (topic === TOPIC_STATUS) {
-        try {
-          const j = JSON.parse(txt);
-          lastStatus = j;
-          updateDisplay(j);
-          // também preenche inputs se ainda estiverem vazios
-          hydrateInputsFromStatus(j);
-        } catch(e) {
-          logDbg({statusParseErr: e.message, txt});
+      try{
+        const txt = payload.toString();
+        if(topic === T_STATUS){
+          applyStatus(JSON.parse(txt));
+        } else if(topic === T_LOGS){
+          applyLogs(JSON.parse(txt));
+        } else if(topic === T_ACK){
+          // opcional: você pode exibir o ACK em algum lugar
+          // console.log("ACK:", txt);
         }
-      } else if (topic === TOPIC_LOGS) {
-        try {
-          const j = JSON.parse(txt);
-          renderLogs(j);
-        } catch(e) {
-          logDbg({logsParseErr: e.message, txt});
-        }
-      } else if (topic === TOPIC_ACK) {
-        try { logDbg(JSON.parse(txt)); }
-        catch { logDbg(txt); }
+      }catch(e){
+        // console.log("parse err", e);
       }
     });
-  }
 
-  function disconnect(){
-    if (client) {
-      client.end(true);
-      client = null;
+    function pub(obj){
+      client.publish(T_CMD, JSON.stringify(obj), { qos: 0, retain: false });
     }
-    setConn(false, "Desconectado");
-  }
 
-  function publishCmd(obj){
-    if (!client || !client.connected) {
-      alert("MQTT não está conectado.");
-      return;
+    function sendModeAuto(){ pub({ mode: "AUTO" }); }
+    function sendManualOn(){ pub({ manual: "ON" }); }
+    function sendManualOff(){ pub({ manual: "OFF" }); }
+
+    function sendConfig(){
+      const threshold = parseInt(document.getElementById("inThreshold").value || "0", 10);
+      const stableN = parseInt(document.getElementById("inStableN").value || "3", 10);
+      const readMs = parseInt(document.getElementById("inReadMs").value || "60000", 10);
+      const irrMs = parseInt(document.getElementById("inIrrMs").value || "300000", 10);
+      pub({ set: { threshold, stableN, readMs, irrMs } });
     }
-    const msg = JSON.stringify(obj);
-    client.publish(TOPIC_CMD, msg, { qos: 0, retain: false });
-    logDbg({send: TOPIC_CMD, msg: obj});
-  }
-
-  // ===== comandos =====
-  function setModeAuto(){ publishCmd({ mode: "AUTO" }); }
-  function manualOn(){ publishCmd({ manual: "ON" }); }
-  function manualOff(){ publishCmd({ manual: "OFF" }); }
-  function requestPing(){ publishCmd({ ping: 1 }); }
-
-  function saveCfg(){
-    const thr = parseInt(document.getElementById("threshold").value || "1900", 10);
-    const readMin = parseInt(document.getElementById("readMin").value || "30", 10);
-    const irrMin  = parseInt(document.getElementById("irrMin").value || "5", 10);
-    const stableN = parseInt(document.getElementById("stableN").value || "3", 10);
-
-    const readMs = Math.max(10_000, Math.min(24*60*60*1000, readMin*60_000));
-    const irrMs  = Math.max(5_000, Math.min(60*60*1000, irrMin*60_000));
-
-    publishCmd({
-      set: { threshold: thr, readMs, irrMs, stableN }
-    });
-  }
-
-  // ===== UI =====
-  function updateDisplay(j){
-    document.getElementById("ip").textContent = j.ip ?? "—";
-    document.getElementById("rssi").textContent = (j.rssi ?? "—");
-    document.getElementById("mode").textContent = translateMode(j.mode);
-    document.getElementById("relay").textContent = (j.relay === "on" ? "LIGADO" : "DESLIGADO");
-    document.getElementById("watering").textContent = (j.watering ? "SIM" : "NÃO");
-    document.getElementById("adcRaw").textContent = j.adcRaw ?? "—";
-    document.getElementById("moistureState").textContent = translateState(j.moistureState);
-    document.getElementById("moisturePct").textContent = (j.moisturePct ?? "—") + "%";
-    document.getElementById("thrNow").textContent = j.threshold ?? "—";
-    document.getElementById("readMsNow").textContent = j.readMs ?? "—";
-    document.getElementById("irrMsNow").textContent = j.irrMs ?? "—";
-    document.getElementById("stableNNow").textContent = j.stableN ?? "—";
-    document.getElementById("counts").textContent = `${j.aboveCount ?? "—"} / ${j.belowCount ?? "—"}`;
-    document.getElementById("uptime").textContent = j.uptimeMs ?? "—";
-  }
-
-  function hydrateInputsFromStatus(j){
-    const thr = document.getElementById("threshold");
-    const readMin = document.getElementById("readMin");
-    const irrMin = document.getElementById("irrMin");
-    const stableN = document.getElementById("stableN");
-
-    if (!thr.value) thr.value = j.threshold ?? "";
-    if (!stableN.value) stableN.value = j.stableN ?? "";
-
-    if (!readMin.value && j.readMs) readMin.value = Math.round(j.readMs/60_000);
-    if (!irrMin.value && j.irrMs) irrMin.value = Math.round(j.irrMs/60_000);
-  }
-
-  function renderLogs(j){
-    const tbody = document.querySelector("#logsTbl tbody");
-    tbody.innerHTML = "";
-
-    const items = j.items || [];
-    for (const it of items) {
-      const tr = document.createElement("tr");
-      const start = fmtEpoch(it.startEpoch);
-      const end   = fmtEpoch(it.endEpoch);
-      const reason= translateReason(it.stopReason);
-      const adc   = `${it.startAdc ?? "—"} → ${it.endAdc ?? "—"}`;
-
-      tr.innerHTML = `<td>${start}</td><td>${end}</td><td>${reason}</td><td class="mono">${adc}</td>`;
-      tbody.appendChild(tr);
-    }
-  }
-
-  function fmtEpoch(e){
-    if (!e || e === 0) return "—";
-    // epoch está em UTC; converte para horário local do navegador
-    return new Date(e*1000).toLocaleString();
-  }
-
-  function translateMode(m){
-    if (!m) return "—";
-    if (m === "auto") return "AUTO";
-    if (m === "on") return "MANUAL (ON)";
-    if (m === "off") return "MANUAL (OFF)";
-    return m;
-  }
-
-  function translateState(s){
-    if (!s) return "—";
-    if (s === "seco") return "SECO";
-    if (s === "molhado") return "MOLHADO";
-    if (s === "limite") return "NO LIMITE";
-    return s;
-  }
-
-  function translateReason(r){
-    if (r === 1) return "Parou: molhou";
-    if (r === 2) return "Parou: tempo máx";
-    if (r === 3) return "Parou: forçado";
-    return r ?? "—";
-  }
-</script>
+  </script>
 </body>
 </html>
