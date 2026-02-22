@@ -152,6 +152,9 @@
     <pre class="mono small" id="dbg">—</pre>
   </div>
 
+  <!-- ÚNICA ALTERAÇÃO PARA GITHUB PAGES -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
 <script>
   // ======= Defaults (não perdem seus endereços/login) =======
   const DEFAULT_DEVICE_ID = localStorage.getItem("device_id") || "esp32_1";
@@ -168,11 +171,6 @@
   document.getElementById("path").value = DEFAULT_PATH;
   document.getElementById("user").value = DEFAULT_USER;
   document.getElementById("pass").value = DEFAULT_PASS;
-
-  // ======= MQTT over WebSockets =======
-  // Use a lib mqtt.js (bundled) or CDN. Para colar no HiveMQ Web Client, ele já fornece mqtt.
-  // Se for hospedar em GitHub Pages e não tiver mqtt global, inclua:
-  // <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
   let client = null;
   let topics = { cmd:"", ack:"", status:"", logs:"" };
@@ -313,7 +311,6 @@
     }
   }
 
-  // ---- Publicação de comando ----
   function publishCmd(obj){
     if (!client || !client.connected){
       alert("MQTT não conectado.");
@@ -324,13 +321,11 @@
     logDbg("PUB " + topics.cmd + " " + data);
   }
 
-  // ---- Render status (compatível com versões) ----
   function renderStatusCompat(st){
     document.getElementById("ip").textContent = st.ip ?? "—";
     document.getElementById("rssi").textContent = (st.rssi ?? "—") + " dBm";
     document.getElementById("mode").textContent = st.mode ?? st.modeStr ?? "—";
 
-    // relay pode vir bool (novo) ou string (antigo)
     const relayOn = (typeof st.relayOn === "boolean") ? st.relayOn
                   : (typeof st.relay === "string") ? (st.relay.toLowerCase() === "on")
                   : false;
@@ -352,7 +347,6 @@
     document.getElementById("counts").textContent = `${st.aboveCount ?? "—"} / ${st.belowCount ?? "—"}`;
     document.getElementById("uptime").textContent = st.uptimeMs ? msToH(st.uptimeMs) : "—";
 
-    // Preenche inputs (sem atrapalhar digitação)
     const inThr = document.getElementById("inThr");
     const inStableN = document.getElementById("inStableN");
     const inReadMin = document.getElementById("inReadMin");
@@ -364,9 +358,7 @@
     if (document.activeElement !== inIrrMin && st.irrMs != null) inIrrMin.value = (st.irrMs/60000).toFixed(1).replace(/\.0$/, "");
   }
 
-  // ---- Envio (formato novo com cmd) ----
   function cmdMode(m){
-    // formato “novo” (recomendado)
     publishCmd({ cmd: "mode", value: m });
   }
 
@@ -378,24 +370,17 @@
     const thr = Number(document.getElementById("inThr").value || 0);
     const stableN = Number(document.getElementById("inStableN").value || 1);
 
-    // minutos aceitam vírgula
     const readMinTxt = (document.getElementById("inReadMin").value || "0").replace(",", ".");
     const irrMinTxt  = (document.getElementById("inIrrMin").value  || "0").replace(",", ".");
     const readMs = Math.round(parseFloat(readMinTxt) * 60000);
     const irrMs  = Math.round(parseFloat(irrMinTxt)  * 60000);
 
-    // formato “novo” (recomendado)
     publishCmd({ cmd: "set", threshold: thr, readMs, irrMs, stableN });
   }
 
-  // ---- Logs compatíveis ----
   function renderLogsCompat(lg){
     const body = document.getElementById("logsBody");
     body.innerHTML = "";
-
-    // pode vir:
-    // - antigo: { items:[...] } com startEpoch/endEpoch/startAdc/endAdc/stopReason
-    // - novo:   { items:[...] } com startLocal/endLocal/adcStart/adcEnd/reason
     const items = lg.items || [];
 
     items.forEach(it => {
