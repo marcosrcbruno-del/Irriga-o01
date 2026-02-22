@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Painel Irrigação (HiveMQ + MQTT)</title>
+  <title>Painel Irrigação (HiveMQ Cloud + MQTT)</title>
   <style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:18px;max-width:980px;background:#f6f7fb}
     h1{margin:0 0 10px 0;font-size:20px}
@@ -26,7 +26,8 @@
     .ok{background:#d6f5dd;color:#0a7a2f}
     .bad{background:#ffe0e0;color:#b00020}
     pre{background:#0b1020;color:#e8edf7;padding:10px;border-radius:12px;overflow:auto;white-space:pre-wrap}
-    hr{border:none;border-top:1px solid #eee;margin:12px 0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
   </style>
 
   <!-- mqtt.js -->
@@ -35,16 +36,28 @@
 
 <body>
   <h1>🌿 Painel Irrigação (HiveMQ Cloud + MQTT)</h1>
+
   <div class="small">
-    Dispositivo: <b class="mono" id="devLbl">irrigacao01</b> • Base: <b class="mono" id="baseLbl">irrigacao/irrigacao01</b>
+    Dispositivo: <b class="mono" id="devLbl">—</b> • Base: <b class="mono" id="baseLbl">—</b>
   </div>
 
   <div class="row" style="margin-top:12px">
     <div class="card">
       <h2>1) Conexão MQTT (WebSocket)</h2>
 
+      <div class="grid">
+        <div>
+          <label>DEVICE_ID (tem que bater com o ESP32)</label>
+          <input id="deviceId" class="mono" style="width:100%" placeholder="irrigacao01"/>
+        </div>
+        <div>
+          <label>Tópicos</label>
+          <div class="small mono" id="topicsLbl">—</div>
+        </div>
+      </div>
+
       <label>Host (sem porta, sem /mqtt)</label>
-      <input id="host" class="mono" style="width:100%" placeholder="f39...hivemq.cloud"/>
+      <input id="host" class="mono" style="width:100%" placeholder="f39abc...hivemq.cloud"/>
 
       <div class="row">
         <div style="flex:1;min-width:140px">
@@ -80,73 +93,70 @@
     </div>
 
     <div class="card">
-      <h2>2) Status (igual ao painel do IP)</h2>
+      <h2>2) Status</h2>
 
       <table>
         <tr><th>Última atualização</th><td id="lastSeen">—</td></tr>
-        <tr><th>IP</th><td class="mono" id="ip">—</td></tr>
-        <tr><th>Wi-Fi RSSI</th><td id="rssi">—</td></tr>
+        <tr><th>IP</th><td id="ip">—</td></tr>
+        <tr><th>RSSI</th><td id="rssi">—</td></tr>
         <tr><th>Modo</th><td id="mode">—</td></tr>
         <tr><th>Relé</th><td id="relay">—</td></tr>
         <tr><th>Irrigando</th><td id="watering">—</td></tr>
-        <tr><th>ADC</th><td class="mono" id="adcRaw">—</td></tr>
+        <tr><th>ADC</th><td id="adcRaw">—</td></tr>
         <tr><th>Estado</th><td id="moistureState">—</td></tr>
-        <tr><th>% (simples)</th><td id="moisturePct">—</td></tr>
-        <tr><th>Threshold</th><td class="mono" id="thrNow">—</td></tr>
-        <tr><th>Leitura (ms)</th><td class="mono" id="readMsNow">—</td></tr>
-        <tr><th>Irrigação máx (ms)</th><td class="mono" id="irrMsNow">—</td></tr>
-        <tr><th>Estável N</th><td class="mono" id="stableNNow">—</td></tr>
-        <tr><th>Acima / Abaixo</th><td class="mono" id="counts">—</td></tr>
-        <tr><th>Uptime (ms)</th><td class="mono" id="uptime">—</td></tr>
+        <tr><th>% Umidade</th><td id="moisturePct">—</td></tr>
+        <tr><th>Threshold</th><td id="thrNow">—</td></tr>
+        <tr><th>read</th><td id="readMsNow">—</td></tr>
+        <tr><th>irrig máx</th><td id="irrMsNow">—</td></tr>
+        <tr><th>StableN</th><td id="stableNNow">—</td></tr>
+        <tr><th>Contadores</th><td id="counts">—</td></tr>
+        <tr><th>Uptime</th><td id="uptime">—</td></tr>
       </table>
+
+      <hr/>
+
+      <h2>3) Comandos</h2>
+
+      <div class="btns">
+        <button class="btn2" onclick="cmdMode('AUTO')">AUTO</button>
+        <button class="btnGray" onclick="cmdMode('MANUAL')">MANUAL</button>
+        <button class="btn2" onclick="cmdManual('ON')">FORÇAR ON</button>
+        <button class="btn3" onclick="cmdManual('OFF')">FORÇAR OFF</button>
+      </div>
+
+      <label style="margin-top:12px">Config</label>
+      <div class="grid">
+        <div>
+          <label>Threshold</label>
+          <input id="inThr" type="number" class="mono" placeholder="1900"/>
+        </div>
+        <div>
+          <label>StableN</label>
+          <input id="inStableN" type="number" class="mono" placeholder="3"/>
+        </div>
+        <div>
+          <label>read (min)</label>
+          <input id="inReadMin" type="number" step="0.1" class="mono" placeholder="30"/>
+        </div>
+        <div>
+          <label>irrig máx (min)</label>
+          <input id="inIrrMin" type="number" step="0.1" class="mono" placeholder="5"/>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="btn" onclick="cmdSet()">Salvar Config</button>
+      </div>
+
+      <div class="small">
+        Dica: aceita vírgula ou ponto nos minutos (ex.: <span class="mono">0,5</span> = 30s).
+      </div>
     </div>
   </div>
 
   <div class="row" style="margin-top:12px">
     <div class="card">
-      <h2>3) Comandos (via MQTT)</h2>
-      <div class="btns">
-        <button class="btn" onclick="cmdAuto()">Modo AUTO</button>
-        <button class="btn2" onclick="cmdManualOn()">Manual ON</button>
-        <button class="btn3" onclick="cmdManualOff()">Manual OFF</button>
-        <button class="btnGray" onclick="cmdPing()">Ping</button>
-      </div>
-
-      <hr/>
-
-      <h2>Configuração</h2>
-      <div class="row">
-        <div style="flex:1;min-width:150px">
-          <label>Threshold (0–4095)</label>
-          <input id="inThr" class="mono" type="number" min="0" max="4095" placeholder="1900"/>
-        </div>
-        <div style="flex:1;min-width:150px">
-          <label>Leitura (min)</label>
-          <input id="inReadMin" class="mono" type="number" min="1" max="1440" placeholder="30"/>
-        </div>
-        <div style="flex:1;min-width:150px">
-          <label>Irrigação (min)</label>
-          <input id="inIrrMin" class="mono" type="number" min="1" max="60" placeholder="5"/>
-        </div>
-        <div style="flex:1;min-width:150px">
-          <label>Estável N (1–20)</label>
-          <input id="inStableN" class="mono" type="number" min="1" max="20" placeholder="3"/>
-        </div>
-      </div>
-
-      <div class="btns">
-        <button class="btn" onclick="cmdSaveCfg()">Salvar Config</button>
-      </div>
-
-      <div class="small" style="margin-top:10px">
-        Tópicos usados: <span class="mono" id="topicsLbl">—</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>4) Logs (últimas 30)</h2>
-      <div class="small">Vem do tópico <span class="mono" id="logsTopicLbl">—</span> (retained).</div>
-
+      <h2>4) Logs (tópico <span class="mono" id="logsTopicLbl">—</span>)</h2>
       <table style="margin-top:8px">
         <thead>
           <tr>
@@ -157,29 +167,50 @@
       </table>
 
       <hr/>
-
       <h2>Debug</h2>
       <pre id="dbg">—</pre>
     </div>
   </div>
 
 <script>
-  // ======= AJUSTES FIXOS =======
-  const DEVICE_ID = "irrigacao01";
-  const DEFAULT_HOST = "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
-  const DEFAULT_PORT = "8884";
-  const DEFAULT_PATH = "/mqtt";
+  // ======= Defaults (não perdem seus endereços/login) =======
+  const DEFAULT_DEVICE_ID = localStorage.getItem("device_id") || "irrigacao01";
+  const DEFAULT_HOST = localStorage.getItem("mqtt_host") || "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
+  const DEFAULT_PORT = localStorage.getItem("mqtt_port") || "8884";
+  const DEFAULT_PATH = localStorage.getItem("mqtt_path") || "/mqtt";
 
-  const BASE = `irrigacao/${DEVICE_ID}`;
-  const T_CMD    = `${BASE}/cmd`;
-  const T_ACK    = `${BASE}/ack`;
-  const T_STATUS = `${BASE}/status`;
-  const T_LOGS   = `${BASE}/logs`;
+  document.getElementById("deviceId").value = DEFAULT_DEVICE_ID;
+  document.getElementById("host").value = DEFAULT_HOST;
+  document.getElementById("port").value = DEFAULT_PORT;
+  document.getElementById("path").value = DEFAULT_PATH;
+  document.getElementById("user").value = localStorage.getItem("mqtt_user") || "";
+  document.getElementById("pass").value = localStorage.getItem("mqtt_pass") || "";
 
-  document.getElementById("devLbl").textContent = DEVICE_ID;
-  document.getElementById("baseLbl").textContent = BASE;
-  document.getElementById("topicsLbl").textContent = `${T_STATUS} • ${T_LOGS} • ${T_ACK} • (cmd→ ${T_CMD})`;
-  document.getElementById("logsTopicLbl").textContent = T_LOGS;
+  let DEVICE_ID = (document.getElementById("deviceId").value || "").trim() || "irrigacao01";
+  let BASE = `irrigacao/${DEVICE_ID}`;
+  let T_CMD = `${BASE}/cmd`;
+  let T_ACK = `${BASE}/ack`;
+  let T_STATUS = `${BASE}/status`;
+  let T_LOGS = `${BASE}/logs`;
+
+  function refreshTopicLabels(){
+    DEVICE_ID = (document.getElementById("deviceId").value || "").trim() || "irrigacao01";
+    BASE = `irrigacao/${DEVICE_ID}`;
+    T_CMD = `${BASE}/cmd`;
+    T_ACK = `${BASE}/ack`;
+    T_STATUS = `${BASE}/status`;
+    T_LOGS = `${BASE}/logs`;
+
+    document.getElementById("devLbl").textContent = DEVICE_ID;
+    document.getElementById("baseLbl").textContent = BASE;
+    document.getElementById("topicsLbl").textContent = `${T_STATUS} • ${T_LOGS} • ${T_ACK} • (cmd→ ${T_CMD})`;
+    document.getElementById("logsTopicLbl").textContent = T_LOGS;
+  }
+  refreshTopicLabels();
+
+  document.getElementById("deviceId").addEventListener("change", () => {
+    refreshTopicLabels();
+  });
 
   // ======= UI helpers =======
   function setPill(ok, txt){
@@ -201,27 +232,36 @@
     console.log(msg);
   }
 
-  // ======= load saved fields =======
-  function loadFields(){
-    document.getElementById("host").value = localStorage.getItem("mqtt_host") || DEFAULT_HOST;
-    document.getElementById("port").value = localStorage.getItem("mqtt_port") || DEFAULT_PORT;
-    document.getElementById("path").value = localStorage.getItem("mqtt_path") || DEFAULT_PATH;
-    document.getElementById("user").value = localStorage.getItem("mqtt_user") || "";
-    document.getElementById("pass").value = localStorage.getItem("mqtt_pass") || "";
+  function translateMode(m){
+    const x = String(m || "").toUpperCase();
+    if(x === "AUTO") return "AUTO";
+    if(x === "MANUAL") return "MANUAL";
+    if(x === "FORCE_ON") return "FORÇAR ON";
+    if(x === "FORCE_OFF") return "FORÇAR OFF";
+    return m ?? "—";
   }
-  loadFields();
+  function translateState(s){
+    const x = String(s || "").toLowerCase();
+    if(x === "seco") return "SECO";
+    if(x === "molhado") return "MOLHADO";
+    if(x === "limite") return "LIMITE";
+    return s ?? "—";
+  }
 
+  // ======= MQTT client =======
   let client = null;
-  let lastStatusAt = 0;
 
   function connect(){
+    refreshTopicLabels();
+
     const host = (document.getElementById("host").value || "").trim();
     const port = (document.getElementById("port").value || "").trim();
     const path = (document.getElementById("path").value || "/mqtt").trim();
     const user = (document.getElementById("user").value || "").trim();
     const pass = (document.getElementById("pass").value || "");
 
-    // salva (local)
+    // salva (local) — não perde login/endereço
+    localStorage.setItem("device_id", DEVICE_ID);
     localStorage.setItem("mqtt_host", host);
     localStorage.setItem("mqtt_port", port);
     localStorage.setItem("mqtt_path", path);
@@ -232,10 +272,8 @@
       alert("Preencha o Host (ex.: f39...hivemq.cloud).");
       return;
     }
-
-    // evita erro comum: host colado com :8884/mqtt
     if(host.includes("/") || host.includes(":")){
-      alert("No campo Host coloque SOMENTE o domínio, sem porta e sem /mqtt.\nExemplo: f39...hivemq.cloud");
+      alert("No campo Host coloque SOMENTE o domínio, sem porta e sem /mqtt.\nExemplo: f39abc...hivemq.cloud");
       return;
     }
 
@@ -243,9 +281,8 @@
     const clientId = `web-${DEVICE_ID}-${Math.random().toString(16).slice(2)}`;
 
     dbg(`Conectando em ${url}`);
-    setPill(false, "conectando...");
+    setPill(false, "conectando.");
 
-    // fecha conexão anterior
     if(client){
       try{ client.end(true); }catch(e){}
       client = null;
@@ -255,7 +292,7 @@
       clientId,
       username: user || undefined,
       password: pass || undefined,
-      protocolVersion: 4,   // MQTT 3.1.1
+      protocolVersion: 4,
       clean: true,
       keepalive: 30,
       reconnectPeriod: 2000,
@@ -265,16 +302,13 @@
     client.on("connect", () => {
       setPill(true, "conectado");
       dbg("✅ CONNECT");
-
       client.subscribe([T_STATUS, T_LOGS, T_ACK], { qos: 0 }, (err) => {
         if(err) dbg("❌ SUB error: " + err.message);
         else dbg("📡 Subscribed: status/logs/ack");
       });
-
-    
     });
 
-    client.on("reconnect", () => { setPill(false, "reconectando..."); dbg("↩️ RECONNECT"); });
+    client.on("reconnect", () => { setPill(false, "reconectando."); dbg("↩️ RECONNECT"); });
     client.on("close", () => { setPill(false, "desconectado"); dbg("🔌 CLOSE"); });
     client.on("offline", () => { setPill(false, "offline"); dbg("📴 OFFLINE"); });
     client.on("error", (e) => { setPill(false, "erro"); dbg("❌ ERROR: " + (e?.message || e)); });
@@ -285,48 +319,81 @@
       if(topic === T_STATUS){
         try{
           const s = JSON.parse(txt);
-          lastStatusAt = Date.now();
           setText("lastSeen", new Date().toLocaleString("pt-BR"));
 
-          setText("ip", s.ip);
-          setText("rssi", s.rssi);
-          setText("mode", translateMode(s.mode));
-          setText("relay", s.relay === "on" ? "LIGADO" : "DESLIGADO");
-          setText("watering", s.watering ? "SIM" : "NÃO");
-          setText("adcRaw", s.adcRaw);
-          setText("moistureState", translateState(s.moistureState));
-          setText("moisturePct", (s.moisturePct ?? "—") + "%");
-          setText("thrNow", s.threshold);
-          setText("readMsNow", s.readMs);
-          setText("irrMsNow", s.irrMs);
-          setText("stableNNow", s.stableN);
-          setText("counts", `${s.aboveCount ?? "—"} / ${s.belowCount ?? "—"}`);
-          setText("uptime", s.uptimeMs);
+          // ---- Compatibilidade: aceita status do firmware antigo OU novo ----
+          const ip = s.ip ?? "—";
+          const rssi = s.rssi ?? "—";
+          const mode = translateMode(s.mode);
 
-          // preenche inputs se vazios
-          if(!document.getElementById("inThr").value && s.threshold != null) document.getElementById("inThr").value = s.threshold;
-          if(!document.getElementById("inStableN").value && s.stableN != null) document.getElementById("inStableN").value = s.stableN;
-          if(!document.getElementById("inReadMin").value && s.readMs != null) document.getElementById("inReadMin").value = Math.round(s.readMs/60000);
-          if(!document.getElementById("inIrrMin").value && s.irrMs != null) document.getElementById("inIrrMin").value = Math.round(s.irrMs/60000);
+          // relay (antigo: "on/off") ou relayOn bool (novo)
+          const relay =
+            (typeof s.relay === "string")
+              ? (s.relay === "on" ? "LIGADO" : "DESLIGADO")
+              : (typeof s.relayOn === "boolean")
+                  ? (s.relayOn ? "LIGADO" : "DESLIGADO")
+                  : "—";
+
+          const watering = (s.watering === true) ? "SIM" : (s.watering === false ? "NÃO" : "—");
+
+          const adc = (s.adcRaw ?? s.adc ?? "—");
+          const st = translateState(s.moistureState ?? s.state);
+          const pct = (s.moisturePct ?? "—");
+
+          const thr = s.threshold ?? "—";
+          const readMs = s.readMs ?? "—";
+          const irrMs = s.irrMs ?? "—";
+          const stableN = s.stableN ?? "—";
+          const counts = `${s.aboveCount ?? "—"} / ${s.belowCount ?? "—"}`;
+          const uptime = s.uptimeMs ?? "—";
+
+          setText("ip", ip);
+          setText("rssi", rssi);
+          setText("mode", mode);
+          setText("relay", relay);
+          setText("watering", watering);
+          setText("adcRaw", adc);
+          setText("moistureState", st);
+          setText("moisturePct", (pct === "—" ? "—" : (pct + "%")));
+          setText("thrNow", thr);
+          setText("readMsNow", readMs);
+          setText("irrMsNow", irrMs);
+          setText("stableNNow", stableN);
+          setText("counts", counts);
+          setText("uptime", uptime);
+
+          // preenche inputs só se vazios (não atrapalhar digitação)
+          const inThr = document.getElementById("inThr");
+          const inStableN = document.getElementById("inStableN");
+          const inReadMin = document.getElementById("inReadMin");
+          const inIrrMin = document.getElementById("inIrrMin");
+
+          if(inThr && !inThr.value) inThr.value = thr;
+          if(inStableN && !inStableN.value) inStableN.value = stableN;
+
+          // se vier em ms, mostra em minutos para edição
+          if(inReadMin && !inReadMin.value && readMs !== "—") inReadMin.value = (Number(readMs)/60000).toFixed(1).replace(/\.0$/, '');
+          if(inIrrMin && !inIrrMin.value && irrMs !== "—") inIrrMin.value = (Number(irrMs)/60000).toFixed(1).replace(/\.0$/, '');
 
         }catch(e){
-          dbg("❌ STATUS JSON inválido: " + e.message);
+          dbg("❌ STATUS JSON inválido");
         }
         return;
       }
 
       if(topic === T_LOGS){
         try{
-          const L = JSON.parse(txt);
-          renderLogs(L);
+          const lg = JSON.parse(txt);
+          renderLogsCompat(lg);
         }catch(e){
-          dbg("❌ LOGS JSON inválido: " + e.message);
+          dbg("❌ LOGS JSON inválido");
         }
         return;
       }
 
       if(topic === T_ACK){
-        dbg("ACK: " + txt);
+        dbg("🟦 ACK: " + txt);
+        return;
       }
     });
   }
@@ -337,88 +404,74 @@
       client = null;
     }
     setPill(false, "desconectado");
+    dbg("🔌 DISCONNECT");
   }
 
   function publishCmd(obj){
     if(!client || !client.connected){
-      alert("MQTT não está conectado.");
+      alert("Conecte no MQTT primeiro.");
       return;
     }
     const msg = JSON.stringify(obj);
+    dbg("➡️ CMD " + msg);
     client.publish(T_CMD, msg, { qos: 0, retain: false });
-    dbg("CMD → " + msg);
   }
 
-  function cmdAuto(){ publishCmd({ mode: "AUTO" }); }
-  function cmdManualOn(){ publishCmd({ manual: "ON" }); }
-  function cmdManualOff(){ publishCmd({ manual: "OFF" }); }
-  function cmdPing(){ publishCmd({ ping: 1 }); }
+  // ---- Envio compatível (manda nos 2 formatos) ----
+  function cmdMode(m){
+    // formato “antigo”
+    publishCmd({ mode: m });
+    // formato “novo”
+    publishCmd({ cmd: "mode", value: m });
+  }
 
-  function cmdSaveCfg(){
-    const thr = parseInt(document.getElementById("inThr").value || "1900", 10);
-    const readMin = parseInt(document.getElementById("inReadMin").value || "30", 10);
-    const irrMin  = parseInt(document.getElementById("inIrrMin").value || "5", 10);
-    const stableN = parseInt(document.getElementById("inStableN").value || "3", 10);
+  function cmdManual(v){
+    publishCmd({ manual: v });
+    publishCmd({ cmd: "manual", value: v });
+  }
 
-    const readMs = Math.max(10_000, Math.min(24*60*60*1000, readMin*60_000));
-    const irrMs  = Math.max(5_000, Math.min(60*60*1000, irrMin*60_000));
+  function cmdSet(){
+    const thr = Number(document.getElementById("inThr").value || 0);
+    const stableN = Number(document.getElementById("inStableN").value || 1);
 
+    // minutos aceitam vírgula
+    const readMinTxt = (document.getElementById("inReadMin").value || "0").replace(",", ".");
+    const irrMinTxt  = (document.getElementById("inIrrMin").value  || "0").replace(",", ".");
+    const readMs = Math.round(parseFloat(readMinTxt) * 60000);
+    const irrMs  = Math.round(parseFloat(irrMinTxt)  * 60000);
+
+    // formato “antigo”
     publishCmd({ set: { threshold: thr, readMs, irrMs, stableN } });
+    // formato “novo”
+    publishCmd({ cmd: "set", threshold: thr, readMs, irrMs, stableN });
   }
 
-  function translateMode(m){
-    if(m === "auto") return "AUTO";
-    if(m === "on") return "MANUAL (ON)";
-    if(m === "off") return "MANUAL (OFF)";
-    return m ?? "—";
-  }
-  function translateState(s){
-    if(s === "seco") return "SECO";
-    if(s === "molhado") return "MOLHADO";
-    if(s === "limite") return "NO LIMITE";
-    return s ?? "—";
-  }
-
-  function renderLogs(L){
+  // ---- Logs compatíveis ----
+  function renderLogsCompat(lg){
     const body = document.getElementById("logsBody");
     body.innerHTML = "";
-    const items = (L && L.items) ? L.items : [];
 
-    for(let i=0;i<items.length;i++){
-      const it = items[i];
+    // pode vir:
+    // - antigo: { items:[...] } com startEpoch/endEpoch/startAdc/endAdc/stopReason
+    // - novo:   { items:[...] } com startLocal/endLocal/adcStart/adcEnd/reason
+    const items = lg.items || [];
+
+    items.forEach((it, i) => {
       const tr = document.createElement("tr");
-      const start = fmtEpoch(it.startEpoch);
-      const end   = fmtEpoch(it.endEpoch);
-      const reason = translateReason(it.stopReason);
-      const adc = `${it.startAdc ?? "—"} → ${it.endAdc ?? "—"}`;
-      tr.innerHTML = `<td>${i+1}</td><td>${start}</td><td>${end}</td><td>${reason}</td><td class="mono">${adc}</td>`;
+
+      const start = it.startLocal ?? it.start ?? (it.startEpoch ? new Date(it.startEpoch*1000).toLocaleString("pt-BR") : "—");
+      const end   = it.endLocal   ?? it.end   ?? (it.endEpoch   ? new Date(it.endEpoch*1000).toLocaleString("pt-BR") : "—");
+
+      const reason = it.reason ?? it.stopReason ?? "—";
+
+      const a0 = it.adcStart ?? it.startAdc ?? "—";
+      const a1 = it.adcEnd   ?? it.endAdc   ?? "—";
+
+      tr.innerHTML = `<td>${i+1}</td><td>${start}</td><td>${end}</td><td>${reason}</td><td>${a0}→${a1}</td>`;
       body.appendChild(tr);
-    }
+    });
   }
 
-  function fmtEpoch(e){
-    if(!e || e === 0) return "—";
-    return new Date(e*1000).toLocaleString("pt-BR");
-  }
-  function translateReason(r){
-    if(r === 1) return "Parou: molhou";
-    if(r === 2) return "Parou: tempo máx";
-    if(r === 3) return "Parou: forçado";
-    return r ?? "—";
-  }
-
-  // se ficar muito tempo sem status, mostra no debug
-  setInterval(() => {
-    if(!lastStatusAt) return;
-    const dt = Date.now() - lastStatusAt;
-    if(dt > 15000){
-      // só avisa uma vez a cada 15s
-      // (não muda a tela, só facilita diagnóstico)
-      dbg("⚠️ Sem status há " + Math.round(dt/1000) + "s (ESP32 pode estar offline no MQTT ou não publicando /status).");
-      lastStatusAt = Date.now(); // evita spam
-    }
-  }, 15000);
 </script>
 </body>
 </html>
-
