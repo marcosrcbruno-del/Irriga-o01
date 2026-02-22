@@ -152,7 +152,7 @@
     <pre class="mono small" id="dbg">—</pre>
   </div>
 
-  <!-- ÚNICA ALTERAÇÃO PARA GITHUB PAGES -->
+  <!-- Necessário para GitHub Pages -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <script>
@@ -218,6 +218,11 @@
   }
 
   function connectMqtt(){
+    if (typeof mqtt === "undefined") {
+      alert("ERRO: biblioteca mqtt.js não carregou. Verifique o <script src=...mqtt.min.js> e bloqueio de rede.");
+      return;
+    }
+
     const dev = buildTopics();
 
     const host = document.getElementById("host").value.trim();
@@ -239,9 +244,12 @@
       if (client) { client.end(true); client = null; }
 
       client = mqtt.connect(url, {
+        clientId: "web-" + dev + "-" + Math.random().toString(16).slice(2, 10),
         username: user || undefined,
         password: pass || undefined,
+        protocolVersion: 4,
         keepalive: 30,
+        connectTimeout: 10000,
         reconnectPeriod: 2000,
         clean: true
       });
