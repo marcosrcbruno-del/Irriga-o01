@@ -30,7 +30,6 @@
     @media (max-width:720px){ .grid{grid-template-columns:1fr} }
   </style>
 
-  <!-- mqtt.js -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 
@@ -48,7 +47,7 @@
       <div class="grid">
         <div>
           <label>DEVICE_ID (tem que bater com o ESP32)</label>
-          <input id="deviceId" class="mono" style="width:100%" placeholder="irrigacao01"/>
+          <input id="deviceId" class="mono" style="width:100%" placeholder="esp32_1"/>
         </div>
         <div>
           <label>Tópicos</label>
@@ -173,8 +172,9 @@
   </div>
 
 <script>
-  // ======= Defaults (não perdem seus endereços/login) =======
-  const DEFAULT_DEVICE_ID = localStorage.getItem("device_id") || "irrigacao01";
+  // ======= Defaults =======
+  // DEVICE_ID atualizado para o mesmo do ESP32
+  const DEFAULT_DEVICE_ID = localStorage.getItem("device_id") || "esp32_1";
   const DEFAULT_HOST = localStorage.getItem("mqtt_host") || "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
   const DEFAULT_PORT = localStorage.getItem("mqtt_port") || "8884";
   const DEFAULT_PATH = localStorage.getItem("mqtt_path") || "/mqtt";
@@ -186,16 +186,18 @@
   document.getElementById("user").value = localStorage.getItem("mqtt_user") || "";
   document.getElementById("pass").value = localStorage.getItem("mqtt_pass") || "";
 
-  let DEVICE_ID = (document.getElementById("deviceId").value || "").trim() || "irrigacao01";
+  let DEVICE_ID = (document.getElementById("deviceId").value || "").trim() || "esp32_1";
   let BASE = `irrigacao/${DEVICE_ID}`;
+
   let T_CMD = `${BASE}/cmd`;
   let T_ACK = `${BASE}/ack`;
   let T_STATUS = `${BASE}/status`;
   let T_LOGS = `${BASE}/logs`;
 
   function refreshTopicLabels(){
-    DEVICE_ID = (document.getElementById("deviceId").value || "").trim() || "irrigacao01";
+    DEVICE_ID = (document.getElementById("deviceId").value || "").trim() || "esp32_1";
     BASE = `irrigacao/${DEVICE_ID}`;
+
     T_CMD = `${BASE}/cmd`;
     T_ACK = `${BASE}/ack`;
     T_STATUS = `${BASE}/status`;
@@ -321,12 +323,10 @@
           const s = JSON.parse(txt);
           setText("lastSeen", new Date().toLocaleString("pt-BR"));
 
-          // ---- Compatibilidade: aceita status do firmware antigo OU novo ----
           const ip = s.ip ?? "—";
           const rssi = s.rssi ?? "—";
           const mode = translateMode(s.mode);
 
-          // relay (antigo: "on/off") ou relayOn bool (novo)
           const relay =
             (typeof s.relay === "string")
               ? (s.relay === "on" ? "LIGADO" : "DESLIGADO")
@@ -371,7 +371,6 @@
           if(inThr && !inThr.value) inThr.value = thr;
           if(inStableN && !inStableN.value) inStableN.value = stableN;
 
-          // se vier em ms, mostra em minutos para edição
           if(inReadMin && !inReadMin.value && readMs !== "—") inReadMin.value = (Number(readMs)/60000).toFixed(1).replace(/\.0$/, '');
           if(inIrrMin && !inIrrMin.value && irrMs !== "—") inIrrMin.value = (Number(irrMs)/60000).toFixed(1).replace(/\.0$/, '');
 
@@ -417,32 +416,27 @@
     client.publish(T_CMD, msg, { qos: 0, retain: false });
   }
 
-  // ---- Envio compatível (manda nos 2 formatos) ----
+  // ---- Envio limpo (apenas formato novo aceito pelo ESP32) ----
   function cmdMode(m){
-    // formato “antigo”
-    publishCmd({ mode: m });
-    // formato “novo”
     publishCmd({ cmd: "mode", value: m });
   }
 
   function cmdManual(v){
-    publishCmd({ manual: v });
     publishCmd({ cmd: "manual", value: v });
   }
 
   function cmdSet(){
     const thr = Number(document.getElementById("inThr").value || 0);
     const stableN = Number(document.getElementById("inStableN").value || 1);
-
-    // minutos aceitam vírgula
+    
+    // Suporte para vírgula ou ponto
     const readMinTxt = (document.getElementById("inReadMin").value || "0").replace(",", ".");
     const irrMinTxt  = (document.getElementById("inIrrMin").value  || "0").replace(",", ".");
+    
+    // Converte minutos para milissegundos
     const readMs = Math.round(parseFloat(readMinTxt) * 60000);
     const irrMs  = Math.round(parseFloat(irrMinTxt)  * 60000);
 
-    // formato “antigo”
-    publishCmd({ set: { threshold: thr, readMs, irrMs, stableN } });
-    // formato “novo”
     publishCmd({ cmd: "set", threshold: thr, readMs, irrMs, stableN });
   }
 
@@ -451,9 +445,6 @@
     const body = document.getElementById("logsBody");
     body.innerHTML = "";
 
-    // pode vir:
-    // - antigo: { items:[...] } com startEpoch/endEpoch/startAdc/endAdc/stopReason
-    // - novo:   { items:[...] } com startLocal/endLocal/adcStart/adcEnd/reason
     const items = lg.items || [];
 
     items.forEach((it, i) => {
