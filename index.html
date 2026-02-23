@@ -19,18 +19,21 @@
     table{width:100%;border-collapse:collapse;font-size:13px}
     th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
     pre{white-space:pre-wrap;word-break:break-word;margin:0}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
     .ok{color:#0a7a0a}
     .bad{color:#b00020}
     .warn{color:#b26a00}
     .btns{display:flex;gap:8px;flex-wrap:wrap}
-    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd;font-size:12px}
+    .btn2{background:#111;color:#fff;border-color:#111}
+    .btn3{background:#fff;color:#111;border-color:#111}
+    .btnGray{background:#eee}
     hr{border:none;border-top:1px solid #eee;margin:12px 0}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd;font-size:12px}
   </style>
 </head>
 <body>
   <h1>Painel Irrigação (HiveMQ Cloud)</h1>
-  <div class="small">Navegador → WSS (8884) /mqtt • ESP32 → TLS (8883)</div><br/>
+  <div class="small">Navegador → WSS (8884) /mqtt • Dispositivo ESP32 → TLS (8883)</div><br/>
 
   <div class="row">
     <div class="card">
@@ -45,6 +48,7 @@
           <label class="small">Host (HiveMQ)</label>
           <input id="host" class="mono" placeholder="ex: xxxx.s1.eu.hivemq.cloud"/>
         </div>
+
         <div>
           <label class="small">Porta (WSS)</label>
           <input id="port" class="mono" placeholder="8884"/>
@@ -53,13 +57,14 @@
           <label class="small">Path (WSS)</label>
           <input id="path" class="mono" placeholder="/mqtt"/>
         </div>
+
         <div>
           <label class="small">Usuário</label>
           <input id="user" class="mono" placeholder="(HiveMQ username)"/>
         </div>
         <div>
           <label class="small">Senha</label>
-          <input id="pass" class="mono" placeholder="(HiveMQ password)"/>
+          <input id="pass" type="password" class="mono" placeholder="(HiveMQ password)"/>
         </div>
       </div>
 
@@ -72,7 +77,13 @@
       <div style="margin-top:10px">
         <span class="pill">Status: <b id="connState" class="warn">desconectado</b></span>
         <span class="pill">Último ACK: <b id="ackState" class="mono">—</b></span>
-        <span class="pill">Último RX: <b id="lastRx" class="mono">—</b></span>
+      </div>
+
+      <div style="margin-top:10px" class="small">
+        <label style="display:flex;gap:8px;align-items:center;">
+          <input type="checkbox" id="dbgAll"/>
+          Ouvir <b>irrigacao/#</b> (debug: detecta DEVICE_ID e mostra mensagens)
+        </label>
       </div>
 
       <hr/>
@@ -80,7 +91,7 @@
     </div>
 
     <div class="card">
-      <h2>2) Status (tópico /status)</h2>
+      <h2>2) Status (via tópico /status)</h2>
       <table>
         <tr><th>IP</th><td id="ip">—</td></tr>
         <tr><th>RSSI</th><td id="rssi">—</td></tr>
@@ -89,39 +100,41 @@
         <tr><th>Irrigando</th><td id="watering">—</td></tr>
         <tr><th>ADC / Estado / %</th><td id="adc">—</td></tr>
         <tr><th>Threshold</th><td id="thr">—</td></tr>
-        <tr><th>read / irrigar máx</th><td id="timers">—</td></tr>
+        <tr><th>readMs / irrMs</th><td id="timers">—</td></tr>
         <tr><th>StableN</th><td id="stableN">—</td></tr>
         <tr><th>Acima/Abaixo</th><td id="counts">—</td></tr>
         <tr><th>Uptime</th><td id="uptime">—</td></tr>
+        <tr><th>Última msg</th><td id="lastRx">—</td></tr>
       </table>
 
       <hr/>
 
       <h2>3) Comandos</h2>
+
       <div class="btns">
-        <button class="primary" onclick="cmdMode('AUTO')">AUTO</button>
-        <button class="gray" onclick="cmdMode('MANUAL')">MANUAL</button>
-        <button class="primary" onclick="cmdManual('ON')">FORÇAR ON</button>
-        <button onclick="cmdManual('OFF')">FORÇAR OFF</button>
+        <button class="btn2" onclick="cmdMode('AUTO')">AUTO</button>
+        <button class="btnGray" onclick="cmdMode('MANUAL')">MANUAL</button>
+        <button class="btn2" onclick="cmdManual('ON')">FORÇAR ON</button>
+        <button class="btn3" onclick="cmdManual('OFF')">FORÇAR OFF</button>
       </div>
 
-      <div style="margin-top:12px" class="small">Config (em <b>minutos</b>)</div>
+      <label style="margin-top:12px">Config</label>
       <div class="grid">
         <div>
           <label>Threshold</label>
-          <input id="inThr" type="number" class="mono" placeholder="2000"/>
+          <input id="inThr" type="number" class="mono" placeholder="1900"/>
         </div>
         <div>
           <label>StableN</label>
-          <input id="inStableN" type="number" class="mono" placeholder="3" min="1"/>
+          <input id="inStableN" type="number" class="mono" placeholder="3"/>
         </div>
         <div>
           <label>read (min)</label>
-          <input id="inReadMin" type="number" step="0.1" min="0.1" class="mono" placeholder="30"/>
+          <input id="inReadMin" type="text" inputmode="decimal" class="mono" placeholder="30"/>
         </div>
         <div>
           <label>irrigar máx (min)</label>
-          <input id="inIrrMin" type="number" step="0.1" min="0.1" class="mono" placeholder="5"/>
+          <input id="inIrrMin" type="text" inputmode="decimal" class="mono" placeholder="5"/>
         </div>
       </div>
 
@@ -147,26 +160,18 @@
     <pre class="mono small" id="dbg">—</pre>
   </div>
 
-  <!-- mqtt.js (WebSocket) -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <script>
-  const LS = {
-    device: "device_id",
-    host: "mqtt_host",
-    port: "mqtt_port",
-    path: "mqtt_path",
-    user: "mqtt_user",
-    pass: "mqtt_pass"
-  };
+  // ======= Defaults (não perdem seus endereços/login) =======
+  const DEFAULT_DEVICE_ID = localStorage.getItem("device_id") || "esp32_1";
+  const DEFAULT_HOST = localStorage.getItem("mqtt_host") || "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
+  const DEFAULT_PORT = localStorage.getItem("mqtt_port") || "8884";   // navegador: WSS
+  const DEFAULT_PATH = localStorage.getItem("mqtt_path") || "/mqtt";  // hiveMQ cloud
+  const DEFAULT_USER = localStorage.getItem("mqtt_user") || "";
+  const DEFAULT_PASS = localStorage.getItem("mqtt_pass") || "";
 
-  const DEFAULT_DEVICE_ID = localStorage.getItem(LS.device) || "esp32_1";
-  const DEFAULT_HOST = localStorage.getItem(LS.host) || "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
-  const DEFAULT_PORT = localStorage.getItem(LS.port) || "8884";
-  const DEFAULT_PATH = localStorage.getItem(LS.path) || "/mqtt";
-  const DEFAULT_USER = localStorage.getItem(LS.user) || "";
-  const DEFAULT_PASS = localStorage.getItem(LS.pass) || "";
-
+  // ======= UI init =======
   document.getElementById("deviceId").value = DEFAULT_DEVICE_ID;
   document.getElementById("host").value = DEFAULT_HOST;
   document.getElementById("port").value = DEFAULT_PORT;
@@ -178,11 +183,39 @@
   let topics = { cmd:"", ack:"", status:"", logs:"" };
   let lastStatus = null;
 
+  // ======= Debug/diagnóstico de recepção =======
+  let lastMsgAt = 0;
+  let lastMsgTopic = "";
+  const detectedIds = Object.create(null);
+
+  function markRx(topic){
+    lastMsgAt = Date.now();
+    lastMsgTopic = topic || "";
+
+    // auto-detecta DEVICE_ID quando ouvindo irrigacao/#
+    const m = /^irrigacao\/([^\/]+)\/(status|logs|ack|cmd)$/.exec(lastMsgTopic);
+    if (m) {
+      const did = m[1];
+      if (!detectedIds[did]) {
+        detectedIds[did] = true;
+        logDbg("Detectado DEVICE_ID no broker: " + did);
+      }
+    }
+  }
+
+  function refreshLastRx(){
+    const el = document.getElementById("lastRx");
+    if (!el) return;
+    if (!lastMsgAt) { el.textContent = "—"; return; }
+    const age = Math.floor((Date.now() - lastMsgAt) / 1000);
+    el.textContent = age + "s atrás (" + (lastMsgTopic || "—") + ")";
+  }
+
+  setInterval(refreshLastRx, 1000);
+
   function logDbg(msg){
     const el = document.getElementById("dbg");
-    const line = new Date().toISOString() + "  " + msg;
-    el.textContent = (el.textContent === "—" ? "" : el.textContent);
-    el.textContent = line + "\n" + el.textContent;
+    el.textContent = (new Date().toISOString()) + "  " + msg + "\n" + el.textContent;
   }
 
   function setConnState(txt, cls){
@@ -191,35 +224,29 @@
     el.className = cls || "";
   }
 
-  function setAck(txt){ document.getElementById("ackState").textContent = txt; }
-  function setLastRx(){ document.getElementById("lastRx").textContent = new Date().toISOString(); }
+  function setAck(txt){
+    document.getElementById("ackState").textContent = txt;
+  }
 
   function msToH(ms){
     const s = Math.floor(ms/1000);
     const m = Math.floor(s/60);
     const h = Math.floor(m/60);
-    return h + "h " + (m%60) + "m " + (s%60) + "s";
-  }
-
-  function msToMinStr(ms){
-    if (typeof ms !== "number") return "—";
-    const min = ms / 60000;
-    const str = min.toFixed(1).replace(/\.0$/, "");
-    return str + " min";
+    return h+"h "+(m%60)+"m "+(s%60)+"s";
   }
 
   function saveCfgLocal(){
-    localStorage.setItem(LS.device, document.getElementById("deviceId").value.trim());
-    localStorage.setItem(LS.host, document.getElementById("host").value.trim());
-    localStorage.setItem(LS.port, document.getElementById("port").value.trim());
-    localStorage.setItem(LS.path, document.getElementById("path").value.trim());
-    localStorage.setItem(LS.user, document.getElementById("user").value);
-    localStorage.setItem(LS.pass, document.getElementById("pass").value);
+    localStorage.setItem("device_id", document.getElementById("deviceId").value.trim());
+    localStorage.setItem("mqtt_host", document.getElementById("host").value.trim());
+    localStorage.setItem("mqtt_port", document.getElementById("port").value.trim());
+    localStorage.setItem("mqtt_path", document.getElementById("path").value.trim());
+    localStorage.setItem("mqtt_user", document.getElementById("user").value);
+    localStorage.setItem("mqtt_pass", document.getElementById("pass").value);
     logDbg("Config local salva.");
   }
 
   function buildTopics(){
-    const dev = (document.getElementById("deviceId").value.trim() || "esp32_1");
+    const dev = document.getElementById("deviceId").value.trim() || "esp32_1";
     topics.cmd = `irrigacao/${dev}/cmd`;
     topics.ack = `irrigacao/${dev}/ack`;
     topics.status = `irrigacao/${dev}/status`;
@@ -229,18 +256,22 @@
 
   function connectMqtt(){
     if (typeof mqtt === "undefined") {
-      alert("ERRO: mqtt.js não carregou. Verifique bloqueio de rede.");
+      alert("ERRO: biblioteca mqtt.js não carregou. Verifique o <script src=...mqtt.min.js> e bloqueio de rede.");
       return;
     }
 
     const dev = buildTopics();
+
     const host = document.getElementById("host").value.trim();
     const port = document.getElementById("port").value.trim();
     const path = document.getElementById("path").value.trim();
     const user = document.getElementById("user").value;
     const pass = document.getElementById("pass").value;
 
-    if (!host){ alert("Preencha o Host."); return; }
+    if (!host){
+      alert("Preencha o Host.");
+      return;
+    }
 
     const url = `wss://${host}:${port}${path}`;
     logDbg("Conectando em: " + url);
@@ -251,28 +282,42 @@
 
       client = mqtt.connect(url, {
         clientId: "web-" + dev + "-" + Math.random().toString(16).slice(2, 10),
-        username: user ? user : undefined,
-        password: pass ? pass : undefined,
+        username: user || undefined,
+        password: pass || undefined,
         protocolVersion: 4,
         keepalive: 30,
-        connectTimeout: 15000,
+        connectTimeout: 10000,
         reconnectPeriod: 2000,
         clean: true
       });
 
       client.on("connect", () => {
         setConnState("conectado", "ok");
-        setAck("—");
         logDbg("MQTT connect OK. Subscribing: " + [topics.status, topics.logs, topics.ack].join(", "));
-
-        client.subscribe([topics.status, topics.logs, topics.ack], { qos: 0 }, (err, granted) => {
+        client.subscribe([topics.status, topics.logs, topics.ack], { qos: 0 }, (err) => {
           if (err) logDbg("Subscribe err: " + err.message);
-          else logDbg("SUBACK: " + JSON.stringify(granted));
         });
+
+        // opcional: ouvir tudo em irrigacao/# para diagnosticar tópicos/DEVICE_ID
+        const dbgEl = document.getElementById("dbgAll");
+        const wantAll = !!(dbgEl && dbgEl.checked);
+        if (wantAll) {
+          client.subscribe("irrigacao/#", { qos: 0 }, (err) => {
+            if (err) logDbg("Subscribe irrigacao/# err: " + err.message);
+            else logDbg("Debug ON: subscribed irrigacao/#");
+          });
+        }
+
+        setAck("—");
       });
 
-      client.on("reconnect", () => setConnState("reconectando...", "warn"));
-      client.on("close", () => setConnState("desconectado", "warn"));
+      client.on("reconnect", () => {
+        setConnState("reconectando...", "warn");
+      });
+
+      client.on("close", () => {
+        setConnState("desconectado", "warn");
+      });
 
       client.on("error", (e) => {
         setConnState("erro", "bad");
@@ -281,10 +326,7 @@
 
       client.on("message", (topic, payload) => {
         const txt = payload.toString();
-        setLastRx();
-        // Loga RX (resumido)
-        logDbg("RX " + topic + " " + (txt.length > 220 ? (txt.slice(0,220) + "...") : txt));
-
+        markRx(topic);
         if (topic === topics.ack){
           setAck(txt);
           return;
@@ -293,7 +335,7 @@
           try{
             const st = JSON.parse(txt);
             lastStatus = st;
-            renderStatus(st);
+            renderStatusCompat(st);
           }catch(e){
             logDbg("Status JSON parse fail: " + e);
           }
@@ -302,7 +344,7 @@
         if (topic === topics.logs){
           try{
             const lg = JSON.parse(txt);
-            renderLogs(lg);
+            renderLogsCompat(lg);
           }catch(e){
             logDbg("Logs JSON parse fail: " + e);
           }
@@ -311,6 +353,26 @@
       });
 
       logDbg("DEVICE_ID=" + dev);
+
+      // toggle debug subscribe enquanto conectado
+      const dbgEl = document.getElementById("dbgAll");
+      if (dbgEl && !dbgEl._bound) {
+        dbgEl._bound = true;
+        dbgEl.addEventListener("change", () => {
+          if (!client || !client.connected) return;
+          if (dbgEl.checked) {
+            client.subscribe("irrigacao/#", { qos: 0 }, (err) => {
+              if (err) logDbg("Subscribe irrigacao/# err: " + err.message);
+              else logDbg("Debug ON: subscribed irrigacao/#");
+            });
+          } else {
+            client.unsubscribe("irrigacao/#", (err) => {
+              if (err) logDbg("Unsubscribe irrigacao/# err: " + err.message);
+              else logDbg("Debug OFF: unsubscribed irrigacao/#");
+            });
+          }
+        });
+      }
     }catch(e){
       setConnState("erro", "bad");
       logDbg("Connect exception: " + e);
@@ -336,31 +398,32 @@
     logDbg("PUB " + topics.cmd + " " + data);
   }
 
-  function renderStatus(st){
-    // Campos básicos
+  function renderStatusCompat(st){
     document.getElementById("ip").textContent = st.ip ?? "—";
     document.getElementById("rssi").textContent = (st.rssi ?? "—") + " dBm";
-    document.getElementById("mode").textContent = st.mode ?? "—";
+    document.getElementById("mode").textContent = st.mode ?? st.modeStr ?? "—";
 
-    const relayOn = (typeof st.relayOn === "boolean") ? st.relayOn : false;
+    const relayOn = (typeof st.relayOn === "boolean") ? st.relayOn
+                  : (typeof st.relay === "string") ? (st.relay.toLowerCase() === "on")
+                  : false;
     document.getElementById("relay").textContent = relayOn ? "ON" : "OFF";
 
-    const watering = (typeof st.watering === "boolean") ? st.watering : false;
+    const watering = (typeof st.watering === "boolean") ? st.watering
+                   : (typeof st.wateringNow === "boolean") ? st.wateringNow
+                   : false;
     document.getElementById("watering").textContent = watering ? "SIM" : "NÃO";
 
-    const adc = st.adc ?? "—";
-    const state = st.state ?? "—";
-    const pct = st.moistPct ?? "—";
+    const adc = st.adc ?? st.adcRaw ?? "—";
+    const state = st.state ?? st.moistureState ?? "—";
+    const pct = st.moistPct ?? st.moisturePct ?? "—";
     document.getElementById("adc").textContent = `${adc} (${state}) / ${pct}%`;
 
-    document.getElementById("thr").textContent = st.threshold ?? "—";
-    document.getElementById("timers").textContent =
-      `${msToMinStr(st.readMs)} / ${msToMinStr(st.irrMs)}  (ms: ${st.readMs ?? "—"} / ${st.irrMs ?? "—"})`;
+    document.getElementById("thr").textContent = st.threshold ?? st.thr ?? "—";
+    document.getElementById("timers").textContent = `${st.readMs ?? "—"} / ${st.irrMs ?? "—"}`;
     document.getElementById("stableN").textContent = st.stableN ?? "—";
     document.getElementById("counts").textContent = `${st.aboveCount ?? "—"} / ${st.belowCount ?? "—"}`;
     document.getElementById("uptime").textContent = st.uptimeMs ? msToH(st.uptimeMs) : "—";
 
-    // Não sobrescreve inputs enquanto você está digitando
     const inThr = document.getElementById("inThr");
     const inStableN = document.getElementById("inStableN");
     const inReadMin = document.getElementById("inReadMin");
@@ -368,62 +431,49 @@
 
     if (document.activeElement !== inThr && st.threshold != null) inThr.value = st.threshold;
     if (document.activeElement !== inStableN && st.stableN != null) inStableN.value = st.stableN;
-    if (document.activeElement !== inReadMin && typeof st.readMs === "number") inReadMin.value = (st.readMs/60000).toFixed(1).replace(/\.0$/, "");
-    if (document.activeElement !== inIrrMin && typeof st.irrMs === "number") inIrrMin.value = (st.irrMs/60000).toFixed(1).replace(/\.0$/, "");
+    if (document.activeElement !== inReadMin && st.readMs != null) inReadMin.value = (st.readMs/60000).toFixed(1).replace(/\.0$/, "");
+    if (document.activeElement !== inIrrMin && st.irrMs != null) inIrrMin.value = (st.irrMs/60000).toFixed(1).replace(/\.0$/, "");
   }
 
-  function cmdMode(m){ publishCmd({ cmd: "mode", value: m }); }
-  function cmdManual(v){ publishCmd({ cmd: "manual", value: v }); }
+  function cmdMode(m){
+    publishCmd({ cmd: "mode", value: m });
+  }
 
-  function toFloatMin(id){
-    const raw = (document.getElementById(id).value || "").trim().replace(",", ".");
-    if (!raw) return null;
-    const v = parseFloat(raw);
-    if (!Number.isFinite(v) || v <= 0) return null;
-    return v;
+  function cmdManual(v){
+    publishCmd({ cmd: "manual", value: v });
   }
 
   function cmdSet(){
-    const obj = { cmd: "set" };
+    const thr = Number(document.getElementById("inThr").value || 0);
+    const stableN = Number(document.getElementById("inStableN").value || 1);
 
-    const thrRaw = (document.getElementById("inThr").value || "").trim();
-    const thr = thrRaw ? Number(thrRaw) : null;
-    if (thr != null && Number.isFinite(thr)) obj.threshold = Math.max(0, Math.min(4095, Math.round(thr)));
+    const readMinTxt = (document.getElementById("inReadMin").value || "0").replace(",", ".");
+    const irrMinTxt  = (document.getElementById("inIrrMin").value  || "0").replace(",", ".");
+    const readMs = Math.round(parseFloat(readMinTxt) * 60000);
+    const irrMs  = Math.round(parseFloat(irrMinTxt)  * 60000);
 
-    const stRaw = (document.getElementById("inStableN").value || "").trim();
-    const stableN = stRaw ? Number(stRaw) : null;
-    if (stableN != null && Number.isFinite(stableN)) obj.stableN = Math.max(1, Math.min(20, Math.round(stableN)));
-
-    const readMin = toFloatMin("inReadMin");
-    if (readMin != null) obj.readMs = Math.round(readMin * 60000);
-
-    const irrMin = toFloatMin("inIrrMin");
-    if (irrMin != null) obj.irrMs = Math.round(irrMin * 60000);
-
-    publishCmd(obj);
-    document.getElementById("cfgMsg").textContent = "Enviado: " + JSON.stringify(obj);
-    setTimeout(()=>document.getElementById("cfgMsg").textContent="—", 3000);
+    publishCmd({ cmd: "set", threshold: thr, readMs, irrMs, stableN });
   }
 
-  function renderLogs(lg){
+  function renderLogsCompat(lg){
     const body = document.getElementById("logsBody");
     body.innerHTML = "";
     const items = lg.items || [];
 
     items.forEach(it => {
-      const start = it.startLocal ?? "—";
-      const end   = it.endLocal ?? "—";
-      const durMs = Number(it.durMs || 0);
+      const start = it.startLocal ?? it.start ?? it.startTime ?? "—";
+      const end   = it.endLocal   ?? it.end   ?? it.endTime   ?? "—";
+      const durMs = it.durMs ?? it.durationMs ?? 0;
 
-      const a0 = it.adcStart ?? "—";
-      const a1 = it.adcEnd ?? "—";
-      const reason = it.reason ?? "—";
+      const a0 = it.adcStart ?? it.startAdc ?? it.adc0 ?? "—";
+      const a1 = it.adcEnd   ?? it.endAdc   ?? it.adc1 ?? "—";
+      const reason = it.reason ?? it.stopReason ?? it.reasonStr ?? "—";
 
       const tr = document.createElement("tr");
       tr.innerHTML =
         `<td>${start}</td>`+
         `<td>${end}</td>`+
-        `<td>${msToH(durMs)}</td>`+
+        `<td>${msToH(Number(durMs)||0)}</td>`+
         `<td>${a0}→${a1}</td>`+
         `<td>${reason}</td>`;
       body.appendChild(tr);
