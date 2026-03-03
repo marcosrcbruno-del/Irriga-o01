@@ -357,7 +357,10 @@
   document.getElementById("path").value     = DEFAULT_PATH;
   document.getElementById("user").value     = DEFAULT_USER;
   document.getElementById("pass").value     = DEFAULT_PASS;
-  document.getElementById("rememberCfg").checked = localStorage.getItem(LS.remember) === "1";
+  const rememberEl = document.getElementById("rememberCfg");
+  if (rememberEl) {
+    rememberEl.checked = localStorage.getItem(LS.remember) === "1";
+  }
 
   let client = null;
   let topics = { cmd:"", ack:"", status:"", logs:"" };
@@ -417,7 +420,8 @@
 
   /* ─── LocalStorage save ─── */
   function saveCfgLocal(){
-    const remember = document.getElementById("rememberCfg").checked;
+    const rememberEl = document.getElementById("rememberCfg");
+    const remember = rememberEl ? rememberEl.checked : true;
 
     if (remember) {
       localStorage.setItem(LS.device, document.getElementById("deviceId").value.trim());
@@ -451,7 +455,6 @@
 
   /* ─── MQTT Connect ─── */
   function connectMqtt(){
-    saveCfgLocal();
     if (typeof mqtt === "undefined") {
       alert("ERRO: mqtt.js não carregou. Verifique bloqueio de rede.");
       return;
@@ -465,6 +468,8 @@
     const pass = document.getElementById("pass").value;
 
     if (!host){ alert("Preencha o Host."); return; }
+
+    saveCfgLocal();
 
     const url = `wss://${host}:${port}${path}`;
     logDbg("Conectando em: " + url);
