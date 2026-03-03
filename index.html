@@ -301,7 +301,11 @@
         <button onclick="disconnectMqtt()">Desconectar</button>
         <button onclick="saveCfgLocal()">Salvar Local</button>
       </div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--sub);cursor:pointer">
+        <input type="checkbox" id="rememberCfg" style="width:auto"/>
+        Lembrar neste aparelho
+      </label>
+      $1
         <span class="pill">Último ACK: <b class="mono" id="ackState">—</b></span>
         <span class="pill">Último RX: <b class="mono" id="lastRx">—</b></span>
       </div>
@@ -336,11 +340,12 @@
   /* ─── LocalStorage ─── */
   const LS = {
     device: "device_id", host: "mqtt_host", port: "mqtt_port",
-    path: "mqtt_path", user: "mqtt_user", pass: "mqtt_pass"
+    path: "mqtt_path", user: "mqtt_user", pass: "mqtt_pass",
+    remember: "mqtt_remember"
   };
 
   const DEFAULT_DEVICE_ID = localStorage.getItem(LS.device) || "irrigacao01";
-  const DEFAULT_HOST = localStorage.getItem(LS.host) || "";
+  const DEFAULT_HOST = localStorage.getItem(LS.host) || "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
   const DEFAULT_PORT = localStorage.getItem(LS.port) || "8884";
   const DEFAULT_PATH = localStorage.getItem(LS.path) || "/mqtt";
   const DEFAULT_USER = localStorage.getItem(LS.user) || "";
@@ -352,6 +357,7 @@
   document.getElementById("path").value     = DEFAULT_PATH;
   document.getElementById("user").value     = DEFAULT_USER;
   document.getElementById("pass").value     = DEFAULT_PASS;
+  document.getElementById("rememberCfg").checked = localStorage.getItem(LS.remember) === "1";
 
   let client = null;
   let topics = { cmd:"", ack:"", status:"", logs:"" };
@@ -361,7 +367,8 @@
     const el = document.getElementById("dbg");
     const line = new Date().toLocaleTimeString() + "  " + msg;
     el.textContent = (el.textContent === "—" ? "" : el.textContent);
-    el.textContent = line + "\n" + el.textContent;
+    el.textContent = line + "
+" + el.textContent;
   }
 
   function setConnState(txt, cls){
@@ -410,13 +417,27 @@
 
   /* ─── LocalStorage save ─── */
   function saveCfgLocal(){
-    localStorage.setItem(LS.device, document.getElementById("deviceId").value.trim());
-    localStorage.setItem(LS.host,   document.getElementById("host").value.trim());
-    localStorage.setItem(LS.port,   document.getElementById("port").value.trim());
-    localStorage.setItem(LS.path,   document.getElementById("path").value.trim());
-    localStorage.setItem(LS.user,   document.getElementById("user").value);
-    localStorage.setItem(LS.pass,   document.getElementById("pass").value);
-    logDbg("Config local salva.");
+    const remember = document.getElementById("rememberCfg").checked;
+
+    if (remember) {
+      localStorage.setItem(LS.device, document.getElementById("deviceId").value.trim());
+      localStorage.setItem(LS.host,   document.getElementById("host").value.trim());
+      localStorage.setItem(LS.port,   document.getElementById("port").value.trim());
+      localStorage.setItem(LS.path,   document.getElementById("path").value.trim());
+      localStorage.setItem(LS.user,   document.getElementById("user").value.trim());
+      localStorage.setItem(LS.pass,   document.getElementById("pass").value);
+      localStorage.setItem(LS.remember, "1");
+      logDbg("Config local salva.");
+    } else {
+      localStorage.removeItem(LS.device);
+      localStorage.removeItem(LS.host);
+      localStorage.removeItem(LS.port);
+      localStorage.removeItem(LS.path);
+      localStorage.removeItem(LS.user);
+      localStorage.removeItem(LS.pass);
+      localStorage.removeItem(LS.remember);
+      logDbg("Config local removida.");
+    }
   }
 
   function buildTopics(){
@@ -430,6 +451,7 @@
 
   /* ─── MQTT Connect ─── */
   function connectMqtt(){
+    saveCfgLocal();
     if (typeof mqtt === "undefined") {
       alert("ERRO: mqtt.js não carregou. Verifique bloqueio de rede.");
       return;
@@ -439,7 +461,7 @@
     const host = document.getElementById("host").value.trim();
     const port = document.getElementById("port").value.trim();
     const path = document.getElementById("path").value.trim();
-    const user = document.getElementById("user").value;
+    const user = document.getElementById("user").value.trim();
     const pass = document.getElementById("pass").value;
 
     if (!host){ alert("Preencha o Host."); return; }
