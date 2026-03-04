@@ -1,378 +1,358 @@
-<!doctype html>
-<html lang="pt-br">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Painel Irrigação</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
+html
+  
+  
+  Painel Irrigação
+  
+  
+  
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#f0f2f5;--card:#fff;--border:#e2e5ea;
-      --text:#1a1d23;--sub:#6b7280;--mono:#4b5563;
-      --accent:#0066ff;--accent-soft:#e8f0fe;
-      --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
-      --red:#dc2626;--red-bg:#fef2f2;--red-border:#fca5a5;
-      --orange:#d97706;--orange-bg:#fffbeb;--orange-border:#fcd34d;
-      --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#93c5fd;
+      --bg:#f0f2f5;--card:#fff;--border:#e2e5ea;<br/>
+      --text:#1a1d23;--sub:#6b7280;--mono:#4b5563;<br/>
+      --accent:#0066ff;--accent-soft:#e8f0fe;<br/>
+      --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;<br/>
+      --red:#dc2626;--red-bg:#fef2f2;--red-border:#fca5a5;<br/>
+      --orange:#d97706;--orange-bg:#fffbeb;--orange-border:#fcd34d;<br/>
+      --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#93c5fd;<br/>
       --radius:14px;--radius-sm:10px;
     }
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);padding:16px;max-width:1080px;margin:0 auto}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);padding:16px;max-width:1080px;margin:0 auto}<br/>
     .mono{font-family:'JetBrains Mono',monospace;font-size:13px}
-
     /* Header */
-    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-    .header h1{font-size:22px;font-weight:700;letter-spacing:-0.5px}
-    .header .subtitle{font-size:12px;color:var(--sub)}
-    .status-dot{width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0}
-    .status-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(5,150,105,.5)}
-    .status-dot.warn{background:var(--orange);animation:pulse 2s infinite}
-    .status-dot.bad{background:var(--red)}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px}<br/>
+    .header h1{font-size:22px;font-weight:700;letter-spacing:-0.5px}<br/>
+    .header .subtitle{font-size:12px;color:var(--sub)}<br/>
+    .status-dot{width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0}<br/>
+    .status-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(5,150,105,.5)}<br/>
+    .status-dot.warn{background:var(--orange);animation:pulse 2s infinite}<br/>
+    .status-dot.bad{background:var(--red)}<br/>
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
     /* Irrigation active banner */
-    .irrig-banner{display:none;background:linear-gradient(135deg,#0066ff,#0ea5e9);color:#fff;padding:14px 18px;border-radius:var(--radius);margin-bottom:16px;align-items:center;gap:12px;animation:bannerPulse 2s infinite}
-    .irrig-banner.active{display:flex}
-    .irrig-banner .icon{font-size:28px}
-    .irrig-banner .label{font-size:15px;font-weight:600}
-    .irrig-banner .detail{font-size:12px;opacity:.85}
-    @keyframes bannerPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,102,255,.3)}50%{box-shadow:0 0 20px 4px rgba(0,102,255,.15)}}
-
-    /* Cards */
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-    .card-title{font-size:13px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
-
-    /* Top row: moisture + connection info */
-    .top-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+    .irrig-banner{display:none;align-items:center;gap:12px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px}<br/>
+    .irrig-banner.active{display:flex}<br/>
+    .irrig-banner .icon{font-size:24px}<br/>
+    .irrig-banner .label{font-size:14px;font-weight:600;color:var(--blue)}<br/>
+    .irrig-banner .detail{font-size:12px;color:var(--sub)}
+    /* Card */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}<br/>
+    .card-title{font-size:13px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}<br/>
+    /* Top row: moisture + connection info */<br/>
+    .top-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}<br/>
     @media(max-width:680px){.top-row{grid-template-columns:1fr}}
-
     /* Moisture card */
-    .moisture-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;position:relative;overflow:hidden}
-    .moisture-card .bg-icon{position:absolute;right:-10px;bottom:-10px;font-size:80px;opacity:.06}
-    .moisture-value{font-size:56px;font-weight:700;letter-spacing:-2px;line-height:1}
-    .moisture-unit{font-size:20px;font-weight:500;color:var(--sub);margin-left:2px}
-    .moisture-label{font-size:13px;color:var(--sub);margin-top:4px}
-    .moisture-bar-wrap{width:100%;max-width:240px;height:8px;background:#e5e7eb;border-radius:99px;margin-top:14px;overflow:hidden}
-    .moisture-bar{height:100%;border-radius:99px;transition:width .6s ease,background .4s ease;width:0%}
-    .moisture-state{margin-top:8px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px}
-    .moisture-state.seco{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
-    .moisture-state.molhado{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-    .moisture-adc{font-size:11px;color:var(--sub);margin-top:6px}
-
+    .moisture-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;position:relative;overflow:hidden}<br/>
+    .moisture-card .bg-icon{position:absolute;right:-10px;bottom:-10px;font-size:80px;opacity:.06}<br/>
+    .moisture-value{font-size:56px;font-weight:700;letter-spacing:-2px;line-height:1}<br/>
+    .moisture-unit{font-size:20px;font-weight:500;color:var(--sub);margin-left:2px}<br/>
+    .moisture-label{font-size:13px;color:var(--sub);margin-top:4px}<br/>
+    .moisture-bar-wrap{width:100%;max-width:240px;height:8px;background:#e5e7eb;border-radius:99px;margin-top:14px;overflow:hidden}<br/>
+    .moisture-bar{height:100%;border-radius:99px;transition:width .6s ease,background .4s ease;width:0%}<br/>
+    .moisture-state{margin-top:8px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px}<br/>
+    .moisture-state.seco{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}<br/>
+    .moisture-state.molhado{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}<br/>
+    /* MODIFICAÇÃO APLICADA: removido font-size:11px — herda 13px da classe .mono */<br/>
+    .moisture-adc{color:var(--sub);margin-top:6px}
     /* Signal quality */
-    .signal-row{display:flex;align-items:center;gap:6px}
-    .signal-bars{display:flex;gap:2px;align-items:flex-end;height:16px}
-    .signal-bars span{width:4px;background:#d1d5db;border-radius:1px}
-    .signal-bars span:nth-child(1){height:4px}
-    .signal-bars span:nth-child(2){height:8px}
-    .signal-bars span:nth-child(3){height:12px}
-    .signal-bars span:nth-child(4){height:16px}
-    .signal-bars.excellent span{background:var(--green)}
-    .signal-bars.good span:nth-child(1),.signal-bars.good span:nth-child(2),.signal-bars.good span:nth-child(3){background:var(--green)}
-    .signal-bars.fair span:nth-child(1),.signal-bars.fair span:nth-child(2){background:var(--orange)}
+    .signal-row{display:flex;align-items:center;gap:6px}<br/>
+    .signal-bars{display:flex;gap:2px;align-items:flex-end;height:16px}<br/>
+    .signal-bars span{width:4px;background:#d1d5db;border-radius:1px}<br/>
+    .signal-bars span:nth-child(1){height:4px}<br/>
+    .signal-bars span:nth-child(2){height:8px}<br/>
+    .signal-bars span:nth-child(3){height:12px}<br/>
+    .signal-bars span:nth-child(4){height:16px}<br/>
+    .signal-bars.excellent span{background:var(--green)}<br/>
+    .signal-bars.good span:nth-child(1),.signal-bars.good span:nth-child(2),.signal-bars.good span:nth-child(3){background:var(--green)}<br/>
+    .signal-bars.fair span:nth-child(1),.signal-bars.fair span:nth-child(2){background:var(--orange)}<br/>
     .signal-bars.poor span:nth-child(1){background:var(--red)}
-
     /* Info grid */
-    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .info-item{padding:10px 12px;background:#f8f9fb;border-radius:var(--radius-sm);border:1px solid #eef0f3}
-    .info-item .label{font-size:11px;color:var(--sub);font-weight:500}
-    .info-item .value{font-size:14px;font-weight:600;margin-top:2px}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}<br/>
+    .info-item{padding:10px 12px;background:#f8f9fb;border-radius:var(--radius-sm);border:1px solid #eef0f3}<br/>
+    .info-item .label{font-size:11px;color:var(--sub);font-weight:500}<br/>
+    .info-item .value{font-size:14px;font-weight:600;margin-top:2px}<br/>
     .info-item .value.mono{font-size:13px;font-weight:500}
-
     /* Config current */
-    .config-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    @media(max-width:680px){.config-grid{grid-template-columns:1fr 1fr}}
-    .config-item{text-align:center;padding:14px 10px;background:#f8f9fb;border-radius:var(--radius-sm);border:1px solid #eef0f3}
-    .config-item .val{font-size:22px;font-weight:700;color:var(--accent)}
+    .config-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}<br/>
+    @media(max-width:680px){.config-grid{grid-template-columns:1fr 1fr}}<br/>
+    .config-item{text-align:center;padding:14px 10px;background:#f8f9fb;border-radius:var(--radius-sm);border:1px solid #eef0f3}<br/>
+    .config-item .val{font-size:22px;font-weight:700;color:var(--accent)}<br/>
     .config-item .lbl{font-size:11px;color:var(--sub);margin-top:2px}
-
     /* Connection card */
-    .conn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .conn-grid input{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;font-size:13px;background:#f8f9fb;transition:border .2s}
-    .conn-grid input:focus{outline:none;border-color:var(--accent);background:#fff}
+    .conn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}<br/>
+    .conn-grid input{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;font-size:13px;background:#f8f9fb;transition:border .2s}<br/>
+    .conn-grid input:focus{outline:none;border-color:var(--accent);background:#fff}<br/>
     .conn-grid label{font-size:11px;color:var(--sub);margin-bottom:3px;display:block;font-weight:500}
-
     /* Buttons */
-    .btns{display:flex;gap:8px;flex-wrap:wrap}
-    button{font-family:'DM Sans',sans-serif;padding:9px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
-    button:hover{background:#f3f4f6}
-    button.primary{background:var(--text);color:#fff;border-color:var(--text)}
-    button.primary:hover{background:#333}
-    button.green{background:var(--green);color:#fff;border-color:var(--green)}
-    button.green:hover{opacity:.9}
-    button.red-outline{border-color:var(--red);color:var(--red)}
+    .btns{display:flex;gap:8px;flex-wrap:wrap}<br/>
+    button{font-family:'DM Sans',sans-serif;padding:9px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}<br/>
+    button:hover{background:#f3f4f6}<br/>
+    button.primary{background:var(--text);color:#fff;border-color:var(--text)}<br/>
+    button.primary:hover{background:#333}<br/>
+    button.green{background:var(--green);color:#fff;border-color:var(--green)}<br/>
+    button.green:hover{opacity:.9}<br/>
+    button.red-outline{border-color:var(--red);color:var(--red)}<br/>
     button.red-outline:hover{background:var(--red-bg)}
-
     /* Command config inputs */
-    .cmd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-    @media(max-width:680px){.cmd-grid{grid-template-columns:1fr 1fr}}
-    .cmd-grid label{font-size:11px;color:var(--sub);display:block;margin-bottom:3px;font-weight:500}
-    .cmd-grid input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;font-size:13px;background:#f8f9fb}
+    .cmd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}<br/>
+    @media(max-width:680px){.cmd-grid{grid-template-columns:1fr 1fr}}<br/>
+    .cmd-grid label{font-size:11px;color:var(--sub);display:block;margin-bottom:3px;font-weight:500}<br/>
+    .cmd-grid input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;font-size:13px;background:#f8f9fb}<br/>
     .cmd-grid input:focus{outline:none;border-color:var(--accent);background:#fff}
-
     /* Pills */
     .pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--border);font-size:12px;background:#f8f9fb}
-
     /* Logs table */
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid var(--border);background:#f8f9fb}
-    td{padding:8px 10px;border-bottom:1px solid #f0f1f3;vertical-align:top}
+    table{width:100%;border-collapse:collapse;font-size:13px}<br/>
+    th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid var(--border);background:#f8f9fb}<br/>
+    td{padding:8px 10px;border-bottom:1px solid #f0f1f3;vertical-align:top}<br/>
     tr:hover td{background:#fafbfc}
-
     /* Debug */
-    pre{white-space:pre-wrap;word-break:break-word;margin:0;font-size:12px;color:var(--mono);max-height:180px;overflow-y:auto}
-
-    hr{border:none;border-top:1px solid #eef0f3;margin:14px 0}
-    .msg{font-size:12px;color:var(--sub);margin-top:8px}
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    pre{white-space:pre-wrap;word-break:break-word;margin:0;font-size:12px;color:var(--mono);max-height:180px;overflow-y:auto}<br/>
+    hr{border:none;border-top:1px solid #eef0f3;margin:14px 0}<br/>
+    .msg{font-size:12px;color:var(--sub);margin-top:8px}<br/>
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}<br/>
     @media(max-width:680px){.two-col{grid-template-columns:1fr}}
-  </style>
-</head>
-<body>
+  
 
-  <!-- Header -->
-  <div class="header">
-    <span class="status-dot" id="dotState"></span>
-    <div>
-      <h1>Painel de Irrigação</h1>
-      <div class="subtitle">HiveMQ Cloud · WSS 8884 · <span id="connLabel" style="font-weight:600;color:var(--orange)">desconectado</span></div>
-    </div>
-  </div>
 
-  <!-- Irrigation active banner -->
-  <div class="irrig-banner" id="irrigBanner">
-    <div class="icon">💧</div>
-    <div>
-      <div class="label">Irrigação em andamento</div>
-      <div class="detail">O sistema está regando agora — relé ativado</div>
-    </div>
-  </div>
-
-  <!-- Top row: Moisture + Device Info -->
-  <div class="top-row">
-    <div class="card moisture-card" id="moistureCard">
-      <div class="bg-icon">💧</div>
-      <div class="card-title">Umidade do Solo</div>
-      <div>
-        <span class="moisture-value" id="moistVal">—</span><span class="moisture-unit">%</span>
-      </div>
-      <div class="moisture-label">Nível atual de umidade</div>
-      <div class="moisture-bar-wrap">
-        <div class="moisture-bar" id="moistBar"></div>
-      </div>
-      <div class="moisture-state" id="moistState" style="display:none"></div>
-      <div class="moisture-adc mono" id="moistAdc"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Dispositivo</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <div class="label">IP</div>
-          <div class="value mono" id="ip">—</div>
-        </div>
-        <div class="info-item">
-          <div class="label">Sinal Wi-Fi</div>
-          <div class="value">
-            <div class="signal-row">
-              <div class="signal-bars" id="signalBars">
-                <span></span><span></span><span></span><span></span>
-              </div>
-              <span class="mono" id="rssi" style="font-size:12px">—</span>
-            </div>
-          </div>
-        </div>
-        <div class="info-item">
-          <div class="label">Modo</div>
-          <div class="value" id="mode">—</div>
-        </div>
-        <div class="info-item">
-          <div class="label">Relé</div>
-          <div class="value" id="relay">—</div>
-        </div>
-        <div class="info-item">
-          <div class="label">Uptime</div>
-          <div class="value mono" id="uptime">—</div>
-        </div>
-        <div class="info-item">
-          <div class="label">Hora (NTP)</div>
-          <div class="value mono" id="time" style="font-size:12px">—</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Config Atual -->
-  <div class="card">
-    <div class="card-title">Configuração Atual</div>
-    <div class="config-grid">
-      <div class="config-item">
-        <div class="val" id="cfgThr">—</div>
-        <div class="lbl">Threshold (ADC)</div>
-      </div>
-      <div class="config-item">
-        <div class="val" id="cfgRead">—</div>
-        <div class="lbl">Intervalo Leitura</div>
-      </div>
-      <div class="config-item">
-        <div class="val" id="cfgIrr">—</div>
-        <div class="lbl">Tempo Irrigação Máx</div>
-      </div>
-      <div class="config-item">
-        <div class="val" id="cfgStable">—</div>
-        <div class="lbl">Leituras p/ Ativar</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--sub)">
-      <span>Contagem acima: <b id="aboveCount">—</b></span>
-      <span>Contagem abaixo: <b id="belowCount">—</b></span>
-    </div>
-  </div>
-
-  <!-- Comandos + Conexão -->
-  <div class="two-col">
-    <div class="card">
-      <div class="card-title">Comandos</div>
-      <div style="margin-bottom:10px;font-size:12px;color:var(--sub)">Modo de operação</div>
-      <div class="btns" style="margin-bottom:14px">
-        <button class="primary" onclick="cmdMode('AUTO')">AUTO</button>
-        <button onclick="cmdMode('MANUAL')">MANUAL</button>
-        <button class="green" onclick="cmdManual('ON')">Forçar ON</button>
-        <button class="red-outline" onclick="cmdManual('OFF')">Forçar OFF</button>
-      </div>
-
-      <hr/>
-      <div style="margin-bottom:10px;font-size:12px;color:var(--sub)">Alterar configuração</div>
-      <div class="cmd-grid">
-        <div>
-          <label>Threshold</label>
-          <input id="inThr" type="number" placeholder="2000"/>
-        </div>
-        <div>
-          <label>StableN</label>
-          <input id="inStableN" type="number" placeholder="3" min="1"/>
-        </div>
-        <div>
-          <label>Leitura (min)</label>
-          <input id="inReadMin" type="number" step="0.1" min="0.1" placeholder="10"/>
-        </div>
-        <div>
-          <label>Irrigar máx (min)</label>
-          <input id="inIrrMin" type="number" step="0.1" min="0.1" placeholder="1"/>
-        </div>
-      </div>
-      <div class="btns" style="margin-top:12px">
-        <button class="primary" onclick="cmdSet()">Salvar Config</button>
-      </div>
-      <div class="msg" id="cfgMsg"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Conexão MQTT</div>
-      <div class="conn-grid">
-        <div>
-          <label>DEVICE_ID</label>
-          <input id="deviceId" placeholder="irrigacao01"/>
-        </div>
-        <div>
-          <label>Host (HiveMQ)</label>
-          <input id="host" placeholder="xxxx.s1.eu.hivemq.cloud"/>
-        </div>
-        <div>
-          <label>Porta WSS</label>
-          <input id="port" placeholder="8884"/>
-        </div>
-        <div>
-          <label>Path</label>
-          <input id="path" placeholder="/mqtt"/>
-        </div>
-        <div>
-          <label>Usuário</label>
-          <input id="user" placeholder="user"/>
-        </div>
-        <div>
-          <label>Senha</label>
-          <input id="pass" type="password" placeholder="senha"/>
-        </div>
-      </div>
-      <div class="btns" style="margin-top:12px">
-        <button class="primary" onclick="connectMqtt()">Conectar</button>
-        <button onclick="disconnectMqtt()">Desconectar</button>
-        <button onclick="saveCfgLocal()">Salvar Local</button>
-      </div>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--sub);cursor:pointer">
-        <input type="checkbox" id="rememberCfg" style="width:auto"/>
-        Lembrar neste aparelho
-      </label>
-      $1
-        <span class="pill">Último ACK: <b class="mono" id="ackState">—</b></span>
-        <span class="pill">Último RX: <b class="mono" id="lastRx">—</b></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Logs -->
-  <div class="card">
-    <div class="card-title">Histórico de Irrigações</div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead>
-          <tr><th>Início</th><th>Fim</th><th>Duração</th><th>ADC</th><th>Motivo</th></tr>
-        </thead>
-        <tbody id="logsBody">
-          <tr><td colspan="5" style="text-align:center;color:var(--sub);padding:20px">Nenhum registro recebido</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Debug -->
-  <div class="card">
-    <div class="card-title" style="cursor:pointer" onclick="document.getElementById('dbg').style.display=document.getElementById('dbg').style.display==='none'?'block':'none'">
+  
+  
+    
+    
+      Painel de Irrigação
+      HiveMQ Cloud · WSS 8884 · desconectado
+    
+  
+  
+  
+    💧
+    
+      Irrigação em andamento
+      O sistema está regando agora — relé ativado
+    
+  
+  
+  
+    
+      💧
+      Umidade do Solo
+      
+        —%
+      
+      Nível atual de umidade
+      
+        
+      
+      
+      
+    
+    
+      Dispositivo
+      
+        
+          IP
+          —
+        
+        
+          Sinal Wi-Fi
+          
+            
+              
+                
+              
+              —
+            
+          
+        
+        
+          Modo
+          —
+        
+        
+          Relé
+          —
+        
+        
+          Uptime
+          —
+        
+        
+          Hora (NTP)
+          —
+        
+      
+    
+  
+  
+  
+    Configuração Atual
+    
+      
+        —
+        Threshold (ADC)
+      
+      
+        —
+        Intervalo Leitura
+      
+      
+        —
+        Tempo Irrigação Máx
+      
+      
+        —
+        Leituras p/ Ativar
+      
+    
+    
+      Contagem acima: —
+       · 
+      Contagem abaixo: —
+    
+  
+  
+  
+    
+      Comandos
+      Modo de operação
+      
+        AUTO
+        MANUAL
+        Forçar ON
+        Forçar OFF
+      
+      
+      Alterar configuração
+      
+        
+          Threshold
+          
+        
+        
+          StableN
+          
+        
+        
+          Leitura (min)
+          
+        
+        
+          Irrigar máx (min)
+          
+        
+      
+      
+        Salvar Config
+      
+      
+    
+    
+      Conexão MQTT
+      
+        
+          DEVICE_ID
+          
+        
+        
+          Host (HiveMQ)
+          
+        
+        
+          Porta WSS
+          
+        
+        
+          Path
+          
+        
+        
+          Usuário
+          
+        
+        
+          Senha
+          
+        
+      
+      
+        Conectar
+        Desconectar
+        Salvar Local
+        
+           Lembrar neste aparelho
+        
+      
+      
+        Último ACK: —
+        Último RX: —
+      
+    
+  
+  
+  
+    Histórico de Irrigações
+    
+      
+        
+          InícioFimDuraçãoADCMotivo
+        
+        
+          Nenhum registro recebido
+        
+      
+    
+  
+  
+  
+    
       Debug ▾
-    </div>
-    <pre class="mono" id="dbg" style="display:none">—</pre>
-  </div>
+    
+    —
+  
+  
 
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-<script>
   /* ─── LocalStorage ─── */
   const LS = {
-    device: "device_id", host: "mqtt_host", port: "mqtt_port",
-    path: "mqtt_path", user: "mqtt_user", pass: "mqtt_pass",
+    device: "device_id", host: "mqtt_host", port: "mqtt_port",<br/>
+    path: "mqtt_path", user: "mqtt_user", pass: "mqtt_pass",<br/>
     remember: "mqtt_remember"
   };
-
-  const DEFAULT_DEVICE_ID = localStorage.getItem(LS.device) || "irrigacao01";
-  const DEFAULT_HOST = localStorage.getItem(LS.host) || "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
-  const DEFAULT_PORT = localStorage.getItem(LS.port) || "8884";
-  const DEFAULT_PATH = localStorage.getItem(LS.path) || "/mqtt";
-  const DEFAULT_USER = localStorage.getItem(LS.user) || "";
-  const DEFAULT_PASS = localStorage.getItem(LS.pass) || "";
-
-  document.getElementById("deviceId").value = DEFAULT_DEVICE_ID;
-  document.getElementById("host").value     = DEFAULT_HOST;
-  document.getElementById("port").value     = DEFAULT_PORT;
-  document.getElementById("path").value     = DEFAULT_PATH;
-  document.getElementById("user").value     = DEFAULT_USER;
-  document.getElementById("pass").value     = DEFAULT_PASS;
-  const rememberEl = document.getElementById("rememberCfg");
-  if (rememberEl) {
-    rememberEl.checked = localStorage.getItem(LS.remember) === "1";
-  }
-
+  const DEFAULT_DEVICE = "irrigacao01";
+  const DEFAULT_HOST   = "";
+  const DEFAULT_PORT   = "8884";
+  const DEFAULT_PATH   = "/mqtt";
+  const DEFAULT_USER   = "";
+  const DEFAULT_PASS   = "";
+  window.addEventListener("DOMContentLoaded", () => {
+    const remember = localStorage.getItem(LS.remember) === "1";
+    if (remember) {
+      document.getElementById("deviceId").value = localStorage.getItem(LS.device) || DEFAULT_DEVICE;
+      document.getElementById("host").value     = localStorage.getItem(LS.host)   || DEFAULT_HOST;
+      document.getElementById("port").value     = localStorage.getItem(LS.port)   || DEFAULT_PORT;
+      document.getElementById("path").value     = localStorage.getItem(LS.path)   || DEFAULT_PATH;
+      document.getElementById("user").value     = localStorage.getItem(LS.user)   || DEFAULT_USER;
+      document.getElementById("pass").value     = localStorage.getItem(LS.pass)   || DEFAULT_PASS;
+    } else {
+      document.getElementById("deviceId").value = DEFAULT_DEVICE;
+      document.getElementById("host").value     = DEFAULT_HOST;
+      document.getElementById("port").value     = DEFAULT_PORT;
+      document.getElementById("path").value     = DEFAULT_PATH;
+      document.getElementById("user").value     = DEFAULT_USER;
+      document.getElementById("pass").value     = DEFAULT_PASS;
+    }
+    const rememberEl = document.getElementById("rememberCfg");
+    if (rememberEl) {
+      rememberEl.checked = localStorage.getItem(LS.remember) === "1";
+    }
+  });
   let client = null;
   let topics = { cmd:"", ack:"", status:"", logs:"" };
-
   /* ─── Helpers ─── */
   function logDbg(msg){
     const el = document.getElementById("dbg");
     const line = new Date().toLocaleTimeString() + "  " + msg;
     el.textContent = (el.textContent === "—" ? "" : el.textContent);
-    el.textContent = line + "\n" + el.textContent;
+    el.textContent = line + "
+" + el.textContent;
   }
-
   function setConnState(txt, cls){
     const label = document.getElementById("connLabel");
     const dot = document.getElementById("dotState");
@@ -380,48 +360,40 @@
     label.style.color = cls === "ok" ? "var(--green)" : cls === "bad" ? "var(--red)" : "var(--orange)";
     dot.className = "status-dot " + (cls || "");
   }
-
   function setAck(txt){ document.getElementById("ackState").textContent = txt; }
   function setLastRx(){ document.getElementById("lastRx").textContent = new Date().toLocaleTimeString(); }
-
   function msToH(ms){
     const s = Math.floor((Number(ms)||0)/1000);
     const m = Math.floor(s/60);
     const h = Math.floor(m/60);
     return h + "h " + (m%60) + "m " + (s%60) + "s";
   }
-
   function msToMinStr(ms){
     if (typeof ms !== "number") return "—";
     const min = ms / 60000;
     return min.toFixed(1).replace(/\.0$/, "") + " min";
   }
-
   function epochToDate(epoch){
     if (typeof epoch !== "number" || epoch < 1000000000) return "—";
     const d = new Date(epoch * 1000);
     return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR");
   }
-
   function rssiQuality(rssi){
-    if (rssi >= -50) return { label:"Excelente", cls:"excellent" };
-    if (rssi >= -65) return { label:"Bom",       cls:"good" };
-    if (rssi >= -75) return { label:"Regular",   cls:"fair" };
+    if (rssi >= -50) return { label:"Excelente", cls:"excellent" };<br/>
+    if (rssi >= -65) return { label:"Bom",       cls:"good" };<br/>
+    if (rssi >= -75) return { label:"Regular",   cls:"fair" };<br/>
     return { label:"Fraco", cls:"poor" };
   }
-
   function moistureColor(pct){
     if (pct >= 60) return "var(--green)";
     if (pct >= 35) return "var(--blue)";
     if (pct >= 15) return "var(--orange)";
     return "var(--red)";
   }
-
   /* ─── LocalStorage save ─── */
   function saveCfgLocal(){
     const rememberEl = document.getElementById("rememberCfg");
     const remember = rememberEl ? rememberEl.checked : true;
-
     if (remember) {
       localStorage.setItem(LS.device, document.getElementById("deviceId").value.trim());
       localStorage.setItem(LS.host,   document.getElementById("host").value.trim());
@@ -442,7 +414,6 @@
       logDbg("Config local removida.");
     }
   }
-
   function buildTopics(){
     const dev = (document.getElementById("deviceId").value.trim() || "irrigacao01");
     topics.cmd    = `irrigacao/${dev}/cmd`;
@@ -451,71 +422,55 @@
     topics.logs   = `irrigacao/${dev}/logs`;
     return dev;
   }
-
   /* ─── MQTT Connect ─── */
   function connectMqtt(){
     if (typeof mqtt === "undefined") {
       alert("ERRO: mqtt.js não carregou. Verifique bloqueio de rede.");
       return;
     }
-
     const dev  = buildTopics();
     const host = document.getElementById("host").value.trim();
     const port = document.getElementById("port").value.trim();
     const path = document.getElementById("path").value.trim();
     const user = document.getElementById("user").value.trim();
     const pass = document.getElementById("pass").value;
-
     if (!host){ alert("Preencha o Host."); return; }
-
-    const url = `wss://${host}:${port}${path}`;
+    const url = `wss://${host}:${port}${path}`;<br/>
     logDbg("Conectando em: " + url);
     setConnState("conectando...", "warn");
-
     try {
       saveCfgLocal();
     } catch (e) {
       logDbg("Falha ao salvar config local: " + e);
     }
-
     try{
       if (client) { client.end(true); client = null; }
-
       client = mqtt.connect(url, {
-        clientId: "web-" + dev + "-" + Math.random().toString(16).slice(2, 10),
-        username: user ? user : undefined,
-        password: pass ? pass : undefined,
-        protocolVersion: 4,
-        keepalive: 30,
-        connectTimeout: 15000,
-        reconnectPeriod: 2000,
-        clean: true
+        clientId: "web-" + dev + "-" + Math.random().toString(16).slice(2,8),<br/>
+        username: user, password: pass,<br/>
+        rejectUnauthorized: false
       });
-
       client.on("connect", () => {
         setConnState("conectado", "ok");
-        setAck("—");
-        logDbg("MQTT connect OK. Subscribing...");
-        client.subscribe([topics.status, topics.logs, topics.ack], { qos: 0 }, (err, granted) => {
-          if (err) logDbg("Subscribe err: " + err.message);
-          else logDbg("SUBACK: " + JSON.stringify(granted));
-        });
+        logDbg("Conectado ao broker.");
+        client.subscribe([topics.ack, topics.status, topics.logs], { qos: 0 });
       });
-
-      client.on("reconnect", () => setConnState("reconectando...", "warn"));
-      client.on("close",     () => setConnState("desconectado", "warn"));
-
-      client.on("error", (e) => {
+      client.on("error", (err) => {
         setConnState("erro", "bad");
-        logDbg("MQTT error: " + (e && e.message ? e.message : e));
+        logDbg("Erro: " + err.message);
       });
-
+      client.on("close", () => {
+        setConnState("desconectado", "warn");
+        logDbg("Conexão encerrada.");
+      });
       client.on("message", (topic, payload) => {
         const txt = payload.toString();
         setLastRx();
-        logDbg("RX " + topic + " " + (txt.length > 200 ? (txt.slice(0, 200) + "...") : txt));
-
-        if (topic === topics.ack){ setAck(txt); return; }
+        if (topic === topics.ack){
+          setAck(txt);
+          logDbg("ACK: " + txt);
+          return;
+        }
         if (topic === topics.status){
           try{ renderStatus(JSON.parse(txt)); }catch(e){ logDbg("Status parse fail: " + e); }
           return;
@@ -525,14 +480,12 @@
           return;
         }
       });
-
       logDbg("DEVICE_ID=" + dev);
     }catch(e){
       setConnState("erro", "bad");
       logDbg("Connect exception: " + e);
     }
   }
-
   function disconnectMqtt(){
     if (client){
       client.end(true);
@@ -541,7 +494,6 @@
       logDbg("Disconnected.");
     }
   }
-
   function publishCmd(obj){
     if (!client || !client.connected){
       alert("MQTT não conectado.");
@@ -551,45 +503,37 @@
     client.publish(topics.cmd, data, { qos: 0, retain: false });
     logDbg("PUB " + topics.cmd + " " + data);
   }
-
   /* ─── Render Status ─── */
   function renderStatus(st){
     // Moisture card
     const pct = st.moistPct ?? null;
     const adc = st.adc ?? "—";
     const state = st.state ?? "—";
-
     if (pct !== null) {
       document.getElementById("moistVal").textContent = pct;
       const bar = document.getElementById("moistBar");
       bar.style.width = Math.min(100, Math.max(0, pct)) + "%";
       bar.style.background = moistureColor(pct);
-
       const stateEl = document.getElementById("moistState");
       stateEl.style.display = "inline-block";
-      stateEl.textContent = state === "seco" ? "Seco" : "Molhado";
+      stateEl.textContent = state === "seco" ? "Seco" : "Molhado";<br/>
       stateEl.className = "moisture-state " + (state === "seco" ? "seco" : "molhado");
     }
     document.getElementById("moistAdc").textContent = `ADC: ${adc} · Threshold: ${st.threshold ?? "—"}`;
-
     // Device info
     document.getElementById("ip").textContent = st.ip ?? "—";
-
     const rssiVal = st.rssi ?? null;
     if (rssiVal !== null) {
       const q = rssiQuality(rssiVal);
       document.getElementById("rssi").textContent = `${rssiVal} dBm (${q.label})`;
       document.getElementById("signalBars").className = "signal-bars " + q.cls;
     }
-
     document.getElementById("mode").textContent = st.mode ?? "—";
-
-    const relayOn = (typeof st.relayOn === "boolean") ? st.relayOn : false;
+    const relayOn = (typeof st.relayOn === "boolean") ? st.relayOn : false;<br/>
     const watering = (typeof st.watering === "boolean") ? st.watering : false;
     const relayEl = document.getElementById("relay");
-    relayEl.textContent = relayOn ? "ON" : "OFF";
+    relayEl.textContent = relayOn ? "ON" : "OFF";<br/>
     relayEl.style.color = relayOn ? "var(--green)" : "";
-
     // Irrigation banner
     const banner = document.getElementById("irrigBanner");
     if (watering) {
@@ -597,14 +541,11 @@
     } else {
       banner.classList.remove("active");
     }
-
     document.getElementById("uptime").textContent = st.uptimeMs ? msToH(st.uptimeMs) : "—";
-
     // NTP time formatted
     const tr = (st.timeReady === true) ? "✓" : (st.timeReady === false ? "✗" : "—");
     const timeStr = epochToDate(st.epochNow);
     document.getElementById("time").textContent = `${timeStr} ${tr}`;
-
     // Current config section
     document.getElementById("cfgThr").textContent    = st.threshold ?? "—";
     document.getElementById("cfgRead").textContent   = msToMinStr(st.readMs);
@@ -612,78 +553,61 @@
     document.getElementById("cfgStable").textContent = st.stableN ?? "—";
     document.getElementById("aboveCount").textContent = st.aboveCount ?? "—";
     document.getElementById("belowCount").textContent = st.belowCount ?? "—";
-
     // Auto-fill config inputs (if not focused)
     const inThr     = document.getElementById("inThr");
     const inStableN = document.getElementById("inStableN");
     const inReadMin = document.getElementById("inReadMin");
     const inIrrMin  = document.getElementById("inIrrMin");
-
     if (document.activeElement !== inThr     && st.threshold != null)             inThr.value     = st.threshold;
     if (document.activeElement !== inStableN && st.stableN != null)               inStableN.value = st.stableN;
     if (document.activeElement !== inReadMin && typeof st.readMs === "number")    inReadMin.value = (st.readMs/60000).toFixed(1).replace(/\.0$/, "");
     if (document.activeElement !== inIrrMin  && typeof st.irrMs  === "number")    inIrrMin.value  = (st.irrMs/60000).toFixed(1).replace(/\.0$/, "");
   }
-
   /* ─── Commands ─── */
-  function cmdMode(m)   { publishCmd({ cmd: "mode",   value: m }); }
-  function cmdManual(v) { publishCmd({ cmd: "manual", value: v }); }
-
+  function cmdMode(m){ publishCmd({ cmd:"mode", mode:m }); }<br/>
+  function cmdManual(s){ publishCmd({ cmd:"relay", state:s }); }
   function toFloatMin(id){
-    const raw = (document.getElementById(id).value || "").trim().replace(",", ".");
-    if (!raw) return null;
-    const v = parseFloat(raw);
-    if (!Number.isFinite(v) || v <= 0) return null;
-    return v;
+    const v = (document.getElementById(id).value || "").trim();
+    if (v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
   }
-
   function cmdSet(){
-    const payload = { cmd: "set" };
-
+    const payload = { cmd:"set" };
     const thrTxt = (document.getElementById("inThr").value || "").trim();
     if (thrTxt !== "") {
       const thr = Number(thrTxt);
       if (Number.isFinite(thr)) payload.threshold = Math.max(0, Math.min(4095, Math.round(thr)));
     }
-
     const stableTxt = (document.getElementById("inStableN").value || "").trim();
     if (stableTxt !== "") {
       const sn = Number(stableTxt);
       if (Number.isFinite(sn)) payload.stableN = Math.max(1, Math.min(20, Math.round(sn)));
     }
-
     const readMin = toFloatMin("inReadMin");
     if (readMin != null) payload.readMs = Math.round(readMin * 60000);
-
     const irrMin = toFloatMin("inIrrMin");
     if (irrMin != null) payload.irrMs = Math.round(irrMin * 60000);
-
     publishCmd(payload);
     document.getElementById("cfgMsg").textContent = "✓ Enviado: " + JSON.stringify(payload);
     setTimeout(() => document.getElementById("cfgMsg").textContent = "", 4000);
   }
-
   /* ─── Logs ─── */
   function renderLogsCompat(lg){
     const body = document.getElementById("logsBody");
     body.innerHTML = "";
-
-    const arr = Array.isArray(lg) ? lg : (lg && Array.isArray(lg.items) ? lg.items : []);
-
-    if (arr.length === 0) {
+    const arr = Array.isArray(lg) ? lg : (lg && Array.isArray(lg.logs) ? lg.logs : []);
+    if (!arr.length){
       body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:20px">Nenhum registro</td></tr>';
       return;
     }
-
-    arr.forEach(it => {
-      const start = it.startLocal ?? it.start ?? it.ini ?? "—";
-      const end   = it.endLocal   ?? it.end   ?? it.fim ?? "—";
-      const durMs = Number(it.durMs ?? it.dur ?? it.durationMs ?? 0);
-
-      const a0     = it.adcStart ?? it.adc0 ?? it.adcIni ?? "—";
-      const a1     = it.adcEnd   ?? it.adc1 ?? it.adcFim ?? "—";
-      const reason = it.reason   ?? it.motivo ?? "—";
-
+    arr.slice().reverse().forEach(ev => {
+      const start  = epochToDate(ev.startEpoch ?? ev.start);
+      const end    = epochToDate(ev.endEpoch   ?? ev.end);
+      const durMs  = ev.durationMs ?? ev.duration ?? 0;
+      const a0     = ev.adcStart ?? ev.adc ?? "—";
+      const a1     = ev.adcEnd   ?? "—";
+      const reason = ev.reason   ?? "—";
       const tr = document.createElement("tr");
       tr.innerHTML =
         `<td class="mono">${start}</td>` +
@@ -694,7 +618,5 @@
       body.appendChild(tr);
     });
   }
-</script>
 
-</body>
-</html>
+
