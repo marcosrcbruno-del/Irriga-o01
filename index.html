@@ -51,7 +51,8 @@
     .moisture-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;position:relative;overflow:hidden}
     .moisture-card .bg-icon{position:absolute;right:-10px;bottom:-10px;font-size:80px;opacity:.06}
     .moisture-value{font-size:56px;font-weight:700;letter-spacing:-2px;line-height:1}
-    .moisture-unit{font-size:20px;font-weight:500;color:var(--sub);margin-left:2px}
+    /* ALTERADO: % com mesmo tamanho do valor */
+    .moisture-unit{font-size:56px;font-weight:700;line-height:1;color:var(--text);margin-left:4px}
     .moisture-label{font-size:13px;color:var(--sub);margin-top:4px}
     .moisture-bar-wrap{width:100%;max-width:240px;height:8px;background:#e5e7eb;border-radius:99px;margin-top:14px;overflow:hidden}
     .moisture-bar{height:100%;border-radius:99px;transition:width .6s ease,background .4s ease;width:0%}
@@ -305,7 +306,9 @@
         <input type="checkbox" id="rememberCfg" style="width:auto"/>
         Lembrar neste aparelho
       </label>
-      $1
+
+      <!-- ALTERADO: removido $1 e restaurado container das pílulas -->
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <span class="pill">Último ACK: <b class="mono" id="ackState">—</b></span>
         <span class="pill">Último RX: <b class="mono" id="lastRx">—</b></span>
       </div>
@@ -600,16 +603,42 @@
 
     document.getElementById("uptime").textContent = st.uptimeMs ? msToH(st.uptimeMs) : "—";
 
-    // NTP time formatted
-    const tr = (st.timeReady === true) ? "✓" : (st.timeReady === false ? "✗" : "—");
-    const timeStr = epochToDate(st.epochNow);
-    document.getElementById("time").textContent = `${timeStr} ${tr}`;
+    /* ALTERADO: hora/config mais compatível */
+    const timeReady = st.timeReady ?? st.ntpReady ?? st.clockReady ?? null;
+    const tr = timeReady === true ? "✓" : timeReady === false ? "✗" : "—";
+
+    const timeRaw =
+      st.epochNow ??
+      st.epoch ??
+      st.now ??
+      st.timestamp ??
+      st.timeEpoch ??
+      null;
+
+    const timeText =
+      (st.timeStr ?? st.datetime ?? st.dataHora ?? "").toString().trim() ||
+      epochToDate(timeRaw);
+
+    document.getElementById("time").textContent = `${timeText} ${tr}`;
+
+    const readMsVal =
+      st.readMs ??
+      st.readIntervalMs ??
+      st.leituraMs ??
+      null;
+
+    const irrMsVal =
+      st.irrMs ??
+      st.irrigationMs ??
+      st.tempoIrrMs ??
+      st.tempoIrrigacaoMs ??
+      null;
 
     // Current config section
-    document.getElementById("cfgThr").textContent    = st.threshold ?? "—";
-    document.getElementById("cfgRead").textContent   = msToMinStr(st.readMs);
-    document.getElementById("cfgIrr").textContent    = msToMinStr(st.irrMs);
-    document.getElementById("cfgStable").textContent = st.stableN ?? "—";
+    document.getElementById("cfgThr").textContent     = st.threshold ?? "—";
+    document.getElementById("cfgRead").textContent    = msToMinStr(readMsVal);
+    document.getElementById("cfgIrr").textContent     = msToMinStr(irrMsVal);
+    document.getElementById("cfgStable").textContent  = st.stableN ?? "—";
     document.getElementById("aboveCount").textContent = st.aboveCount ?? "—";
     document.getElementById("belowCount").textContent = st.belowCount ?? "—";
 
@@ -621,8 +650,8 @@
 
     if (document.activeElement !== inThr     && st.threshold != null)             inThr.value     = st.threshold;
     if (document.activeElement !== inStableN && st.stableN != null)               inStableN.value = st.stableN;
-    if (document.activeElement !== inReadMin && typeof st.readMs === "number")    inReadMin.value = (st.readMs/60000).toFixed(1).replace(/\.0$/, "");
-    if (document.activeElement !== inIrrMin  && typeof st.irrMs  === "number")    inIrrMin.value  = (st.irrMs/60000).toFixed(1).replace(/\.0$/, "");
+    if (document.activeElement !== inReadMin && typeof readMsVal === "number")    inReadMin.value = (readMsVal/60000).toFixed(1).replace(/\.0$/, "");
+    if (document.activeElement !== inIrrMin  && typeof irrMsVal  === "number")    inIrrMin.value  = (irrMsVal/60000).toFixed(1).replace(/\.0$/, "");
   }
 
   /* ─── Commands ─── */
@@ -664,11 +693,57 @@
   }
 
   /* ─── Logs ─── */
+  function formatDateTimeAny(v){
+    if (v == null || v === "") return "—";
+
+    if (typeof v === "number") {
+      const ms = v < 1000000000000 ? v * 1000 : v;
+      const d = new Date(ms);
+      if (!Number.isNaN(d.getTime())) {
+        return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR");
+      }
+    }
+
+    if (typeof v === "string") {
+      const s = v.trim();
+      if (!s) return "—";
+
+      if (/^[0-9]+$/.test(s)) {
+        const n = Number(s);
+        const ms = n < 1000000000000 ? n * 1000 : n;
+        const d = new Date(ms);
+        if (!Number.isNaN(d.getTime())) {
+          return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR");
+        }
+      }
+
+      return s;
+    }
+
+    return "—";
+  }
+
+  function getDurMs(it){
+    if (it.durMs != null) return Number(it.durMs) || 0;
+    if (it.durationMs != null) return Number(it.durationMs) || 0;
+    if (it.dur != null) return Number(it.dur) || 0;
+    if (it.durSec != null) return (Number(it.durSec) || 0) * 1000;
+    if (it.durationSec != null) return (Number(it.durationSec) || 0) * 1000;
+    if (it.durMin != null) return (Number(it.durMin) || 0) * 60000;
+    return 0;
+  }
+
   function renderLogsCompat(lg){
     const body = document.getElementById("logsBody");
     body.innerHTML = "";
 
-    const arr = Array.isArray(lg) ? lg : (lg && Array.isArray(lg.items) ? lg.items : []);
+    const arr =
+      Array.isArray(lg) ? lg :
+      (lg && Array.isArray(lg.items)) ? lg.items :
+      (lg && Array.isArray(lg.logs)) ? lg.logs :
+      (lg && Array.isArray(lg.history)) ? lg.history :
+      (lg && Array.isArray(lg.entries)) ? lg.entries :
+      [];
 
     if (arr.length === 0) {
       body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:20px">Nenhum registro</td></tr>';
@@ -676,19 +751,28 @@
     }
 
     arr.forEach(it => {
-      const start = it.startLocal ?? it.start ?? it.ini ?? "—";
-      const end   = it.endLocal   ?? it.end   ?? it.fim ?? "—";
-      const durMs = Number(it.durMs ?? it.dur ?? it.durationMs ?? 0);
+      const startRaw =
+        it.startLocal ?? it.start ?? it.ini ??
+        it.startedAt ?? it.startTs ?? it.startEpoch ?? it.inicio;
 
-      const a0     = it.adcStart ?? it.adc0 ?? it.adcIni ?? "—";
-      const a1     = it.adcEnd   ?? it.adc1 ?? it.adcFim ?? "—";
-      const reason = it.reason   ?? it.motivo ?? "—";
+      const endRaw =
+        it.endLocal ?? it.end ?? it.fim ??
+        it.endedAt ?? it.endTs ?? it.endEpoch ?? it.final;
+
+      const durMs = getDurMs(it);
+
+      const a0 = it.adcStart ?? it.adc0 ?? it.adcIni ?? it.adcBefore ?? "—";
+      const a1 = it.adcEnd   ?? it.adc1 ?? it.adcFim ?? it.adcAfter  ?? "—";
+      const reason = it.reason ?? it.motivo ?? it.cause ?? "—";
+
+      const start = formatDateTimeAny(startRaw);
+      const end   = formatDateTimeAny(endRaw);
 
       const tr = document.createElement("tr");
       tr.innerHTML =
         `<td class="mono">${start}</td>` +
         `<td class="mono">${end}</td>` +
-        `<td>${msToH(durMs)}</td>` +
+        `<td>${durMs > 0 ? msToH(durMs) : "—"}</td>` +
         `<td class="mono">${a0} → ${a1}</td>` +
         `<td>${reason}</td>`;
       body.appendChild(tr);
