@@ -370,8 +370,7 @@
     const el = document.getElementById("dbg");
     const line = new Date().toLocaleTimeString() + "  " + msg;
     el.textContent = (el.textContent === "—" ? "" : el.textContent);
-    el.textContent = line + "
-" + el.textContent;
+    el.textContent = line + "\n" + el.textContent;
   }
 
   function setConnState(txt, cls){
@@ -469,11 +468,15 @@
 
     if (!host){ alert("Preencha o Host."); return; }
 
-    saveCfgLocal();
-
     const url = `wss://${host}:${port}${path}`;
     logDbg("Conectando em: " + url);
     setConnState("conectando...", "warn");
+
+    try {
+      saveCfgLocal();
+    } catch (e) {
+      logDbg("Falha ao salvar config local: " + e);
+    }
 
     try{
       if (client) { client.end(true); client = null; }
