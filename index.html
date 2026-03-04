@@ -1,4 +1,7 @@
 html
+
+
+
   
   
   Painel Irrigação
@@ -28,14 +31,11 @@ html
     .status-dot.bad{background:var(--red)}<br/>
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     /* Irrigation active banner */
-    .irrig-banner{display:none;align-items:center;gap:12px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px}<br/>
+    .irrig-banner{display:none;align-items:center;gap:12px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px}<br/>
     .irrig-banner.active{display:flex}<br/>
-    .irrig-banner .icon{font-size:24px}<br/>
+    .irrig-banner .icon{font-size:28px}<br/>
     .irrig-banner .label{font-size:14px;font-weight:600;color:var(--blue)}<br/>
-    .irrig-banner .detail{font-size:12px;color:var(--sub)}
-    /* Card */
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}<br/>
-    .card-title{font-size:13px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}<br/>
+    .irrig-banner .detail{font-size:12px;color:var(--sub);margin-top:2px}<br/>
     /* Top row: moisture + connection info */<br/>
     .top-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}<br/>
     @media(max-width:680px){.top-row{grid-template-columns:1fr}}
@@ -50,7 +50,7 @@ html
     .moisture-state{margin-top:8px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px}<br/>
     .moisture-state.seco{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}<br/>
     .moisture-state.molhado{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}<br/>
-    /* MODIFICAÇÃO APLICADA: removido font-size:11px — herda 13px da classe .mono */<br/>
+    /* MODIFICAÇÃO 1 APLICADA: removido font-size:11px */<br/>
     .moisture-adc{color:var(--sub);margin-top:6px}
     /* Signal quality */
     .signal-row{display:flex;align-items:center;gap:6px}<br/>
@@ -110,6 +110,9 @@ html
     .msg{font-size:12px;color:var(--sub);margin-top:8px}<br/>
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}<br/>
     @media(max-width:680px){.two-col{grid-template-columns:1fr}}
+    /* Card base */
+    .card{background:var(--card);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}<br/>
+    .card-title{font-size:13px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
   
 
 
@@ -133,16 +136,13 @@ html
   
     
       💧
-      Umidade do Solo
       
         —%
       
       Nível atual de umidade
       
-        
       
-      
-      
+      ADC: — · Threshold: —
     
     
       Dispositivo
@@ -155,8 +155,6 @@ html
           Sinal Wi-Fi
           
             
-              
-                
               
               —
             
@@ -175,37 +173,25 @@ html
           —
         
         
-          Hora (NTP)
+          Hora NTP
           —
         
       
+      Última mensagem: — · —
     
   
   
   
     Configuração Atual
     
-      
-        —
-        Threshold (ADC)
-      
-      
-        —
-        Intervalo Leitura
-      
-      
-        —
-        Tempo Irrigação Máx
-      
-      
-        —
-        Leituras p/ Ativar
-      
+      —Threshold ADC
+      —Leitura
+      —Irrigação máx
+      —StableN
     
     
-      Contagem acima: —
-       · 
-      Contagem abaixo: —
+      Acima threshold: —
+      Abaixo threshold: —
     
   
   
@@ -235,12 +221,12 @@ html
           
         
         
-          Irrigar máx (min)
+          Irrigação máx (min)
           
         
       
       
-        Salvar Config
+        Enviar Config
       
       
     
@@ -275,14 +261,9 @@ html
       
         Conectar
         Desconectar
-        Salvar Local
         
-           Lembrar neste aparelho
+           Lembrar
         
-      
-      
-        Último ACK: —
-        Último RX: —
       
     
   
@@ -315,34 +296,23 @@ html
     path: "mqtt_path", user: "mqtt_user", pass: "mqtt_pass",<br/>
     remember: "mqtt_remember"
   };
-  const DEFAULT_DEVICE = "irrigacao01";
+  const DEFAULT_DEVICE = "";
   const DEFAULT_HOST   = "";
   const DEFAULT_PORT   = "8884";
   const DEFAULT_PATH   = "/mqtt";
   const DEFAULT_USER   = "";
   const DEFAULT_PASS   = "";
-  window.addEventListener("DOMContentLoaded", () => {
-    const remember = localStorage.getItem(LS.remember) === "1";
-    if (remember) {
-      document.getElementById("deviceId").value = localStorage.getItem(LS.device) || DEFAULT_DEVICE;
-      document.getElementById("host").value     = localStorage.getItem(LS.host)   || DEFAULT_HOST;
-      document.getElementById("port").value     = localStorage.getItem(LS.port)   || DEFAULT_PORT;
-      document.getElementById("path").value     = localStorage.getItem(LS.path)   || DEFAULT_PATH;
-      document.getElementById("user").value     = localStorage.getItem(LS.user)   || DEFAULT_USER;
-      document.getElementById("pass").value     = localStorage.getItem(LS.pass)   || DEFAULT_PASS;
-    } else {
-      document.getElementById("deviceId").value = DEFAULT_DEVICE;
-      document.getElementById("host").value     = DEFAULT_HOST;
-      document.getElementById("port").value     = DEFAULT_PORT;
-      document.getElementById("path").value     = DEFAULT_PATH;
-      document.getElementById("user").value     = DEFAULT_USER;
-      document.getElementById("pass").value     = DEFAULT_PASS;
-    }
-    const rememberEl = document.getElementById("rememberCfg");
-    if (rememberEl) {
-      rememberEl.checked = localStorage.getItem(LS.remember) === "1";
-    }
-  });
+  /* ─── Init ─── */
+  document.getElementById("deviceId").value = localStorage.getItem(LS.device) || DEFAULT_DEVICE;
+  document.getElementById("host").value     = localStorage.getItem(LS.host)   || DEFAULT_HOST;
+  document.getElementById("port").value     = localStorage.getItem(LS.port)   || DEFAULT_PORT;
+  document.getElementById("path").value     = localStorage.getItem(LS.path)   || DEFAULT_PATH;
+  document.getElementById("user").value     = localStorage.getItem(LS.user)   || DEFAULT_USER;
+  document.getElementById("pass").value     = localStorage.getItem(LS.pass)   || DEFAULT_PASS;
+  const rememberEl = document.getElementById("rememberCfg");
+  if (rememberEl) {
+    rememberEl.checked = localStorage.getItem(LS.remember) === "1";
+  }
   let client = null;
   let topics = { cmd:"", ack:"", status:"", logs:"" };
   /* ─── Helpers ─── */
@@ -447,61 +417,46 @@ html
       if (client) { client.end(true); client = null; }
       client = mqtt.connect(url, {
         clientId: "web-" + dev + "-" + Math.random().toString(16).slice(2,8),<br/>
-        username: user, password: pass,<br/>
-        rejectUnauthorized: false
+        username: user,<br/>
+        password: pass,<br/>
+        keepalive: 30,<br/>
+        reconnectPeriod: 5000,<br/>
+        connectTimeout: 10000
       });
       client.on("connect", () => {
         setConnState("conectado", "ok");
         logDbg("Conectado ao broker.");
-        client.subscribe([topics.ack, topics.status, topics.logs], { qos: 0 });
+        client.subscribe([topics.ack, topics.status, topics.logs], err => {
+          if (err) logDbg("Erro subscribe: " + err);
+          else logDbg("Subscrito nos tópicos.");
+        });
       });
-      client.on("error", (err) => {
+      client.on("error", err => {
         setConnState("erro", "bad");
-        logDbg("Erro: " + err.message);
+        logDbg("Erro MQTT: " + err.message);
       });
       client.on("close", () => {
-        setConnState("desconectado", "warn");
+        setConnState("desconectado", "bad");
         logDbg("Conexão encerrada.");
       });
       client.on("message", (topic, payload) => {
-        const txt = payload.toString();
         setLastRx();
-        if (topic === topics.ack){
-          setAck(txt);
-          logDbg("ACK: " + txt);
-          return;
-        }
-        if (topic === topics.status){
-          try{ renderStatus(JSON.parse(txt)); }catch(e){ logDbg("Status parse fail: " + e); }
-          return;
-        }
-        if (topic === topics.logs){
-          try{ renderLogsCompat(JSON.parse(txt)); }catch(e){ logDbg("Logs parse fail: " + e); }
-          return;
-        }
+        let obj;
+        try { obj = JSON.parse(payload.toString()); } catch(e){ logDbg("JSON inválido: "+payload); return; }
+        document.getElementById("dbg").textContent = JSON.stringify(obj, null, 2);
+        if (topic === topics.status) renderStatus(obj);
+        else if (topic === topics.logs) renderLogsCompat(obj);
+        else if (topic === topics.ack) setAck("ACK: " + (obj.status ?? JSON.stringify(obj)));
       });
-      logDbg("DEVICE_ID=" + dev);
-    }catch(e){
+    } catch(e){
       setConnState("erro", "bad");
-      logDbg("Connect exception: " + e);
+      logDbg("Exceção ao conectar: " + e);
     }
   }
   function disconnectMqtt(){
-    if (client){
-      client.end(true);
-      client = null;
-      setConnState("desconectado", "warn");
-      logDbg("Disconnected.");
-    }
-  }
-  function publishCmd(obj){
-    if (!client || !client.connected){
-      alert("MQTT não conectado.");
-      return;
-    }
-    const data = JSON.stringify(obj);
-    client.publish(topics.cmd, data, { qos: 0, retain: false });
-    logDbg("PUB " + topics.cmd + " " + data);
+    if (client){ client.end(true); client = null; }
+    setConnState("desconectado", "");
+    logDbg("Desconectado manualmente.");
   }
   /* ─── Render Status ─── */
   function renderStatus(st){
@@ -563,17 +518,71 @@ html
     if (document.activeElement !== inReadMin && typeof st.readMs === "number")    inReadMin.value = (st.readMs/60000).toFixed(1).replace(/\.0$/, "");
     if (document.activeElement !== inIrrMin  && typeof st.irrMs  === "number")    inIrrMin.value  = (st.irrMs/60000).toFixed(1).replace(/\.0$/, "");
   }
+  /* ─── Logs ─── */
+  /* MODIFICAÇÃO 2 APLICADA: renderLogsCompat corrigido para exibir data/hora/duração */
+  function renderLogsCompat(lg){
+    const body = document.getElementById("logsBody");
+    body.innerHTML = "";
+    const arr = Array.isArray(lg) ? lg : (lg && Array.isArray(lg.items) ? lg.items : []);
+    if (arr.length === 0) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:20px">Nenhum registro</td></tr>';
+      return;
+    }
+    arr.forEach(it => {
+      // Extrair start — se for epoch (número), converte; se for string, usa direto
+      const startRaw = it.startLocal ?? it.start ?? it.ini ?? null;
+      let start;
+      if (typeof startRaw === 'number' && startRaw > 0) {
+        start = epochToDate(startRaw);
+      } else if (typeof startRaw === 'string') {
+        start = startRaw;
+      } else {
+        start = "—";
+      }
+      // Mesmo processo para end
+      const endRaw = it.endLocal ?? it.end ?? it.fim ?? null;
+      let end;
+      if (typeof endRaw === 'number' && endRaw > 0) {
+        end = epochToDate(endRaw);
+      } else if (typeof endRaw === 'string') {
+        end = endRaw;
+      } else {
+        end = "—";
+      }
+      // Duração: tenta durMs direto; fallback calcula por startEpoch/endEpoch
+      let durMs = Number(it.durMs ?? it.dur ?? it.durationMs ?? 0);
+      if (durMs === 0 && it.startEpoch && it.endEpoch) {
+        durMs = (it.endEpoch - it.startEpoch) * 1000;
+      }
+      const a0     = it.adcStart ?? it.adc0 ?? it.adcIni ?? "—";
+      const a1     = it.adcEnd   ?? it.adc1 ?? it.adcFim ?? "—";
+      const reason = it.reason   ?? it.motivo ?? "—";
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        `<td class="mono">${start}</td>` +
+        `<td class="mono">${end}</td>` +
+        `<td>${msToH(durMs)}</td>` +
+        `<td class="mono">${a0} → ${a1}</td>` +
+        `<td>${reason}</td>`;
+      body.appendChild(tr);
+    });
+  }
   /* ─── Commands ─── */
-  function cmdMode(m){ publishCmd({ cmd:"mode", mode:m }); }<br/>
-  function cmdManual(s){ publishCmd({ cmd:"relay", state:s }); }
+  function publishCmd(payload){
+    if (!client || !client.connected){ alert("Não conectado ao broker."); return; }
+    client.publish(topics.cmd, JSON.stringify(payload));
+    logDbg("CMD enviado: " + JSON.stringify(payload));
+  }
+  function cmdMode(mode){ publishCmd({ cmd: "mode", value: mode }); }<br/>
+  function cmdManual(state){ publishCmd({ cmd: "relay", value: state }); }
   function toFloatMin(id){
     const v = (document.getElementById(id).value || "").trim();
     if (v === "") return null;
-    const n = Number(v);
+    const n = parseFloat(v);
     return Number.isFinite(n) && n > 0 ? n : null;
   }
-  function cmdSet(){
-    const payload = { cmd:"set" };
+  function cmdSetConfig(){
+    const payload = { cmd: "config" };
     const thrTxt = (document.getElementById("inThr").value || "").trim();
     if (thrTxt !== "") {
       const thr = Number(thrTxt);
@@ -591,32 +600,6 @@ html
     publishCmd(payload);
     document.getElementById("cfgMsg").textContent = "✓ Enviado: " + JSON.stringify(payload);
     setTimeout(() => document.getElementById("cfgMsg").textContent = "", 4000);
-  }
-  /* ─── Logs ─── */
-  function renderLogsCompat(lg){
-    const body = document.getElementById("logsBody");
-    body.innerHTML = "";
-    const arr = Array.isArray(lg) ? lg : (lg && Array.isArray(lg.logs) ? lg.logs : []);
-    if (!arr.length){
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:20px">Nenhum registro</td></tr>';
-      return;
-    }
-    arr.slice().reverse().forEach(ev => {
-      const start  = epochToDate(ev.startEpoch ?? ev.start);
-      const end    = epochToDate(ev.endEpoch   ?? ev.end);
-      const durMs  = ev.durationMs ?? ev.duration ?? 0;
-      const a0     = ev.adcStart ?? ev.adc ?? "—";
-      const a1     = ev.adcEnd   ?? "—";
-      const reason = ev.reason   ?? "—";
-      const tr = document.createElement("tr");
-      tr.innerHTML =
-        `<td class="mono">${start}</td>` +
-        `<td class="mono">${end}</td>` +
-        `<td>${msToH(durMs)}</td>` +
-        `<td class="mono">${a0} → ${a1}</td>` +
-        `<td>${reason}</td>`;
-      body.appendChild(tr);
-    });
   }
 
 
