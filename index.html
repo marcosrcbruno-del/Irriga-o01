@@ -177,9 +177,9 @@
       <hr/>
       <div style="margin-bottom:10px;font-size:12px;color:var(--sub)">Alterar configuração</div>
       <div class="cmd-grid">
-        <div><label>Threshold</label><input id="inThr" type="number" placeholder="2000"/></div>
-        <div><label>StableN</label><input id="inStableN" type="number" placeholder="5" min="1"/></div>
-        <div><label>Leitura (min)</label><input id="inReadMin" type="number" step="0.1" min="0.1" placeholder="1"/></div>
+        <div><label>Threshold</label><input id="inThr" type="number" placeholder="1940"/></div>
+        <div><label>StableN</label><input id="inStableN" type="number" placeholder="3" min="1"/></div>
+        <div><label>Leitura (min)</label><input id="inReadMin" type="number" step="0.1" min="0.1" placeholder="15"/></div>
         <div><label>Irrigar máx (min)</label><input id="inIrrMin" type="number" step="0.1" min="0.1" placeholder="5"/></div>
       </div>
       <div class="btns" style="margin-top:12px">
@@ -192,10 +192,10 @@
       <div class="card-title">Conexão MQTT</div>
       <div class="conn-grid">
         <div><label>DEVICE_ID</label><input id="deviceId" placeholder="irrigacao01"/></div>
-        <div><label>Host (HiveMQ)</label><input id="host" placeholder="xxxx.s1.eu.hivemq.cloud"/></div>
+        <div><label>Host (HiveMQ)</label><input id="host" placeholder="f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud"/></div>
         <div><label>Porta WSS</label><input id="port" placeholder="8884"/></div>
         <div><label>Path</label><input id="path" placeholder="/mqtt"/></div>
-        <div><label>Usuário</label><input id="user" placeholder="user"/></div>
+        <div><label>Usuário</label><input id="user" placeholder="armarcos"/></div>
         <div><label>Senha</label><input id="pass" type="password" placeholder="senha"/></div>
       </div>
       <div class="btns" style="margin-top:12px">
@@ -238,7 +238,7 @@
 
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script>
-    const ESP32_FIXED_URL = "http://192.168.1.200/";
+    const ESP32_FIXED_URL = "http://192.168.0.200/";
     const LS = {
       device: "device_id",
       host: "mqtt_host",
@@ -253,7 +253,7 @@
     const DEFAULT_HOST = localStorage.getItem(LS.host) || "f39abc7b833944818687793a7175eed4.s1.eu.hivemq.cloud";
     const DEFAULT_PORT = localStorage.getItem(LS.port) || "8884";
     const DEFAULT_PATH = localStorage.getItem(LS.path) || "/mqtt";
-    const DEFAULT_USER = localStorage.getItem(LS.user) || "";
+    const DEFAULT_USER = localStorage.getItem(LS.user) || "armarcos";
     const DEFAULT_PASS = localStorage.getItem(LS.pass) || "";
 
     document.getElementById("deviceId").value = DEFAULT_DEVICE_ID;
