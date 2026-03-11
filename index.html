@@ -11,11 +11,9 @@
     :root{
       --bg:#f0f2f5;--card:#fff;--border:#e2e5ea;
       --text:#1a1d23;--sub:#6b7280;--mono:#4b5563;
-      --accent:#0066ff;--accent-soft:#e8f0fe;
-      --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
-      --red:#dc2626;--red-bg:#fef2f2;--red-border:#fca5a5;
-      --orange:#d97706;--orange-bg:#fffbeb;--orange-border:#fcd34d;
-      --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#93c5fd;
+      --accent:#0066ff;--green:#059669;--red:#dc2626;--orange:#d97706;--blue:#2563eb;
+      --green-bg:#ecfdf5;--green-border:#a7f3d0;
+      --red-bg:#fef2f2;--red-border:#fca5a5;
       --radius:14px;--radius-sm:10px;
     }
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);padding:16px;max-width:1080px;margin:0 auto}
@@ -25,19 +23,21 @@
     .header .subtitle{font-size:12px;color:var(--sub)}
     .status-dot{width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0}
     .status-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(5,150,105,.5)}
-    .status-dot.warn{background:var(--orange);animation:pulse 2s infinite}
+    .status-dot.warn{background:var(--orange)}
     .status-dot.bad{background:var(--red)}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .irrig-banner{display:none;background:linear-gradient(135deg,#0066ff,#0ea5e9);color:#fff;padding:14px 18px;border-radius:var(--radius);margin-bottom:16px;align-items:center;gap:12px;animation:bannerPulse 2s infinite}
+
+    .irrig-banner{display:none;background:linear-gradient(135deg,#0066ff,#0ea5e9);color:#fff;padding:14px 18px;border-radius:var(--radius);margin-bottom:16px;align-items:center;gap:12px}
     .irrig-banner.active{display:flex}
     .irrig-banner .icon{font-size:28px}
     .irrig-banner .label{font-size:15px;font-weight:600}
-    .irrig-banner .detail{font-size:12px;opacity:.85}
-    @keyframes bannerPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,102,255,.3)}50%{box-shadow:0 0 20px 4px rgba(0,102,255,.15)}}
+    .irrig-banner .detail{font-size:12px;opacity:.88}
+
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
     .card-title{font-size:13px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+
     .top-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
     @media(max-width:680px){.top-row{grid-template-columns:1fr}}
+
     .moisture-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;position:relative;overflow:hidden}
     .moisture-card .bg-icon{position:absolute;right:-10px;bottom:-10px;font-size:80px;opacity:.06}
     .moisture-value{font-size:56px;font-weight:700;letter-spacing:-2px;line-height:1}
@@ -49,6 +49,7 @@
     .moisture-state.seco{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
     .moisture-state.molhado{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
     .moisture-adc{font-size:14px;color:var(--mono);margin-top:8px}
+
     .signal-row{display:flex;align-items:center;gap:6px}
     .signal-bars{display:flex;gap:2px;align-items:flex-end;height:16px}
     .signal-bars span{width:4px;background:#d1d5db;border-radius:1px}
@@ -60,39 +61,41 @@
     .signal-bars.good span:nth-child(1),.signal-bars.good span:nth-child(2),.signal-bars.good span:nth-child(3){background:var(--green)}
     .signal-bars.fair span:nth-child(1),.signal-bars.fair span:nth-child(2){background:var(--orange)}
     .signal-bars.poor span:nth-child(1){background:var(--red)}
+
     .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .info-item{padding:10px 12px;background:#f8f9fb;border-radius:var(--radius-sm);border:1px solid #eef0f3}
     .info-item .label{font-size:11px;color:var(--sub);font-weight:500}
     .info-item .value{font-size:14px;font-weight:600;margin-top:2px}
     .info-item .value.mono{font-size:13px;font-weight:500}
+
     .config-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
     @media(max-width:680px){.config-grid{grid-template-columns:1fr 1fr}}
     .config-item{text-align:center;padding:14px 10px;background:#f8f9fb;border-radius:var(--radius-sm);border:1px solid #eef0f3}
     .config-item .val{font-size:22px;font-weight:700;color:var(--accent)}
     .config-item .lbl{font-size:11px;color:var(--sub);margin-top:2px}
-    .conn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .conn-grid input{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;font-size:13px;background:#f8f9fb;transition:border .2s}
-    .conn-grid input:focus{outline:none;border-color:var(--accent);background:#fff}
-    .conn-grid label{font-size:11px;color:var(--sub);margin-bottom:3px;display:block;font-weight:500}
+
+    .conn-grid,.cmd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .cmd-grid{grid-template-columns:repeat(4,1fr)}
+    @media(max-width:680px){.cmd-grid,.conn-grid{grid-template-columns:1fr 1fr}}
+    input{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;font-size:13px;background:#f8f9fb}
+    input:focus{outline:none;border-color:var(--accent);background:#fff}
+    label{font-size:11px;color:var(--sub);margin-bottom:3px;display:block;font-weight:500}
+
     .btns{display:flex;gap:8px;flex-wrap:wrap}
-    button{font-family:'DM Sans',sans-serif;padding:9px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+    button{font-family:'DM Sans',sans-serif;padding:9px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;font-weight:500}
     button:hover{background:#f3f4f6}
     button.primary{background:var(--text);color:#fff;border-color:var(--text)}
-    button.primary:hover{background:#333}
     button.green{background:var(--green);color:#fff;border-color:var(--green)}
-    button.green:hover{opacity:.9}
     button.red-outline{border-color:var(--red);color:var(--red)}
     button.red-outline:hover{background:var(--red-bg)}
-    .cmd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-    @media(max-width:680px){.cmd-grid{grid-template-columns:1fr 1fr}}
-    .cmd-grid label{font-size:11px;color:var(--sub);display:block;margin-bottom:3px;font-weight:500}
-    .cmd-grid input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;font-size:13px;background:#f8f9fb}
-    .cmd-grid input:focus{outline:none;border-color:var(--accent);background:#fff}
+
     .pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--border);font-size:12px;background:#f8f9fb}
+
     table{width:100%;border-collapse:collapse;font-size:13px}
     th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid var(--border);background:#f8f9fb}
     td{padding:8px 10px;border-bottom:1px solid #f0f1f3;vertical-align:top}
     tr:hover td{background:#fafbfc}
+
     pre{white-space:pre-wrap;word-break:break-word;margin:0;font-size:12px;color:var(--mono);max-height:180px;overflow-y:auto}
     hr{border:none;border-top:1px solid #eef0f3;margin:14px 0}
     .msg{font-size:12px;color:var(--sub);margin-top:8px}
@@ -105,7 +108,7 @@
     <span class="status-dot" id="dotState"></span>
     <div>
       <h1>Painel de Irrigação</h1>
-      <div class="subtitle">HiveMQ Cloud · WSS 8884 · <span id="connLabel" style="font-weight:600;color:var(--orange)">desconectado</span></div>
+      <div class="subtitle">HiveMQ Cloud - WSS 8884 - <span id="connLabel" style="font-weight:600;color:var(--orange)">desconectado</span></div>
     </div>
   </div>
 
@@ -118,10 +121,10 @@
   </div>
 
   <div class="top-row">
-    <div class="card moisture-card" id="moistureCard">
+    <div class="card moisture-card">
       <div class="bg-icon">💧</div>
       <div class="card-title">Umidade do Solo</div>
-      <div><span class="moisture-value" id="moistVal">—</span><span class="moisture-unit">%</span></div>
+      <div><span class="moisture-value" id="moistVal">-</span><span class="moisture-unit">%</span></div>
       <div class="moisture-label">Nível atual de umidade</div>
       <div class="moisture-bar-wrap"><div class="moisture-bar" id="moistBar"></div></div>
       <div class="moisture-state" id="moistState" style="display:none"></div>
@@ -131,20 +134,20 @@
     <div class="card">
       <div class="card-title">Dispositivo</div>
       <div class="info-grid">
-        <div class="info-item"><div class="label">IP</div><div class="value mono" id="ip">—</div></div>
+        <div class="info-item"><div class="label">IP</div><div class="value mono" id="ip">-</div></div>
         <div class="info-item">
           <div class="label">Sinal Wi-Fi</div>
           <div class="value">
             <div class="signal-row">
               <div class="signal-bars" id="signalBars"><span></span><span></span><span></span><span></span></div>
-              <span class="mono" id="rssi" style="font-size:12px">—</span>
+              <span class="mono" id="rssi" style="font-size:12px">-</span>
             </div>
           </div>
         </div>
-        <div class="info-item"><div class="label">Modo</div><div class="value" id="mode">—</div></div>
-        <div class="info-item"><div class="label">Relé</div><div class="value" id="relay">—</div></div>
-        <div class="info-item"><div class="label">Uptime</div><div class="value mono" id="uptime">—</div></div>
-        <div class="info-item"><div class="label">Hora (NTP)</div><div class="value mono" id="time" style="font-size:12px">—</div></div>
+        <div class="info-item"><div class="label">Modo</div><div class="value" id="mode">-</div></div>
+        <div class="info-item"><div class="label">Relé</div><div class="value" id="relay">-</div></div>
+        <div class="info-item"><div class="label">Uptime</div><div class="value mono" id="uptime">-</div></div>
+        <div class="info-item"><div class="label">Hora (NTP)</div><div class="value mono" id="time" style="font-size:12px">-</div></div>
       </div>
     </div>
   </div>
@@ -152,14 +155,14 @@
   <div class="card">
     <div class="card-title">Configuração Atual</div>
     <div class="config-grid">
-      <div class="config-item"><div class="val" id="cfgThr">—</div><div class="lbl">Threshold (ADC)</div></div>
-      <div class="config-item"><div class="val" id="cfgRead">—</div><div class="lbl">Intervalo Leitura</div></div>
-      <div class="config-item"><div class="val" id="cfgIrr">—</div><div class="lbl">Tempo Irrigação Máx</div></div>
-      <div class="config-item"><div class="val" id="cfgStable">—</div><div class="lbl">Leituras p/ Ativar</div></div>
+      <div class="config-item"><div class="val" id="cfgThr">-</div><div class="lbl">Threshold (ADC)</div></div>
+      <div class="config-item"><div class="val" id="cfgRead">-</div><div class="lbl">Intervalo Leitura</div></div>
+      <div class="config-item"><div class="val" id="cfgIrr">-</div><div class="lbl">Tempo Irrigação Máx</div></div>
+      <div class="config-item"><div class="val" id="cfgStable">-</div><div class="lbl">Leituras p/ Ativar</div></div>
     </div>
     <div style="display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--sub)">
-      <span>Contagem acima: <b id="aboveCount">—</b></span>
-      <span>Contagem abaixo: <b id="belowCount">—</b></span>
+      <span>Contagem acima: <b id="aboveCount">-</b></span>
+      <span>Contagem abaixo: <b id="belowCount">-</b></span>
     </div>
   </div>
 
@@ -170,8 +173,8 @@
       <div class="btns" style="margin-bottom:14px">
         <button class="primary" onclick="cmdMode('AUTO')">AUTO</button>
         <button onclick="cmdMode('MANUAL')">MANUAL</button>
-        <button class="green" onclick="cmdManual(true)">Forçar ON</button>
-        <button class="red-outline" onclick="cmdManual(false)">Forçar OFF</button>
+        <button class="green" onclick="cmdManual('ON')">Forçar ON</button>
+        <button class="red-outline" onclick="cmdManual('OFF')">Forçar OFF</button>
       </div>
 
       <hr/>
@@ -183,7 +186,7 @@
         <div><label>Irrigar máx (min)</label><input id="inIrrMin" type="number" step="0.1" min="0.1" placeholder="5"/></div>
       </div>
       <div class="btns" style="margin-top:12px">
-        <button class="primary" onclick="cmdSetConfig()">Salvar Config</button>
+        <button class="primary" onclick="cmdSet()">Salvar Config</button>
       </div>
       <div class="msg" id="cfgMsg"></div>
     </div>
@@ -209,8 +212,8 @@
         Lembrar neste aparelho
       </label>
       <div class="btns" style="margin-top:10px">
-        <span class="pill">Último ACK: <b class="mono" id="ackState">—</b></span>
-        <span class="pill">Último RX: <b class="mono" id="lastRx">—</b></span>
+        <span class="pill">Último ACK: <b class="mono" id="ackState">-</b></span>
+        <span class="pill">Último RX: <b class="mono" id="lastRx">-</b></span>
       </div>
     </div>
   </div>
@@ -230,10 +233,8 @@
   </div>
 
   <div class="card">
-    <div class="card-title" style="cursor:pointer" onclick="document.getElementById('dbg').style.display=document.getElementById('dbg').style.display==='none'?'block':'none'">
-      Debug ▾
-    </div>
-    <pre class="mono" id="dbg" style="display:none">—</pre>
+    <div class="card-title" style="cursor:pointer" onclick="toggleDbg()">Debug ▾</div>
+    <pre class="mono" id="dbg" style="display:none">-</pre>
   </div>
 
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -268,13 +269,17 @@
 
     let client = null;
     let topics = { cmd:"", ack:"", status:"", logs:"" };
-    let logHistory = [];
 
     function logDbg(msg){
       const el = document.getElementById("dbg");
       const line = new Date().toLocaleTimeString() + "  " + msg;
-      el.textContent = (el.textContent === "—" ? "" : el.textContent);
+      el.textContent = (el.textContent === "-" ? "" : el.textContent);
       el.textContent = line + "\n" + el.textContent;
+    }
+
+    function toggleDbg(){
+      const el = document.getElementById("dbg");
+      el.style.display = el.style.display === "none" ? "block" : "none";
     }
 
     function setConnState(txt, cls){
@@ -285,19 +290,8 @@
       dot.className = "status-dot " + (cls || "");
     }
 
-    function setAck(txt){
-      try {
-        const obj = JSON.parse(txt);
-        const text = obj.message ? `${obj.status}: ${obj.message}` : (obj.status || txt);
-        document.getElementById("ackState").textContent = text;
-      } catch {
-        document.getElementById("ackState").textContent = txt;
-      }
-    }
-
-    function setLastRx(){
-      document.getElementById("lastRx").textContent = new Date().toLocaleTimeString();
-    }
+    function setAck(txt){ document.getElementById("ackState").textContent = txt; }
+    function setLastRx(){ document.getElementById("lastRx").textContent = new Date().toLocaleTimeString(); }
 
     function msToH(ms){
       const s = Math.floor((Number(ms) || 0) / 1000);
@@ -307,50 +301,15 @@
     }
 
     function msToMinStr(ms){
-      if (typeof ms !== "number") return "—";
+      if (typeof ms !== "number") return "-";
       const min = ms / 60000;
       return min.toFixed(1).replace(/\.0$/, "") + " min";
     }
 
     function epochToDate(epoch){
-      if (typeof epoch !== "number" || epoch < 1000000000) return "—";
+      if (typeof epoch !== "number" || epoch < 1000000000) return "-";
       const d = new Date(epoch * 1000);
       return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR");
-    }
-
-    function formatLogDate(value){
-      if (value == null || value === "") return "—";
-
-      if (typeof value === "number") {
-        const ms = value > 1000000000000 ? value : value * 1000;
-        const d = new Date(ms);
-        if (!isNaN(d.getTime())) {
-          return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR");
-        }
-      }
-
-      if (typeof value === "string") {
-        const txt = value.trim();
-        if (!txt) return "—";
-
-        if (/^\d+$/.test(txt)) {
-          const num = Number(txt);
-          const ms = num > 1000000000000 ? num : num * 1000;
-          const d = new Date(ms);
-          if (!isNaN(d.getTime())) {
-            return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR");
-          }
-        }
-
-        const d = new Date(txt);
-        if (!isNaN(d.getTime())) {
-          return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR");
-        }
-
-        return txt;
-      }
-
-      return "—";
     }
 
     function rssiQuality(rssi){
@@ -429,7 +388,10 @@
       try { saveCfgLocal(); } catch (e) { logDbg("Falha ao salvar config local: " + e); }
 
       try {
-        if (client) { client.end(true); client = null; }
+        if (client) {
+          client.end(true);
+          client = null;
+        }
 
         client = mqtt.connect(url, {
           clientId: "web-" + dev + "-" + Math.random().toString(16).slice(2, 10),
@@ -444,7 +406,8 @@
 
         client.on("connect", () => {
           setConnState("conectado", "ok");
-          setAck("—");
+          setAck("-");
+          logDbg("MQTT connect OK. Subscribing...");
           client.subscribe([topics.status, topics.logs, topics.ack], { qos: 0 }, (err, granted) => {
             if (err) logDbg("Subscribe err: " + err.message);
             else logDbg("SUBACK: " + JSON.stringify(granted));
@@ -463,9 +426,20 @@
           setLastRx();
           logDbg("RX " + topic + " " + (txt.length > 200 ? txt.slice(0, 200) + "..." : txt));
 
-          if (topic === topics.ack) { setAck(txt); return; }
-          if (topic === topics.status) { try { renderStatus(JSON.parse(txt)); } catch(e) { logDbg("Status parse fail: " + e); } return; }
-          if (topic === topics.logs) { try { renderLogsCompat(JSON.parse(txt)); } catch(e) { logDbg("Logs parse fail: " + e); } return; }
+          if (topic === topics.ack) {
+            setAck(txt);
+            return;
+          }
+
+          if (topic === topics.status) {
+            try { renderStatus(JSON.parse(txt)); } catch (e) { logDbg("Status parse fail: " + e); }
+            return;
+          }
+
+          if (topic === topics.logs) {
+            try { renderLogsCompat(JSON.parse(txt)); } catch (e) { logDbg("Logs parse fail: " + e); }
+            return;
+          }
         });
 
         logDbg("DEVICE_ID=" + dev);
@@ -496,8 +470,8 @@
 
     function renderStatus(st){
       const pct = st.moistPct ?? null;
-      const adc = st.adc ?? "—";
-      const state = st.state ?? "—";
+      const adc = st.adc ?? "-";
+      const state = st.state ?? "-";
 
       if (pct !== null) {
         document.getElementById("moistVal").textContent = pct;
@@ -507,12 +481,12 @@
 
         const stateEl = document.getElementById("moistState");
         stateEl.style.display = "inline-block";
-        stateEl.textContent = state === "seco" ? "Seco" : "Molhado";
+        stateEl.textContent = state === "seco" ? "Seco" : (state === "molhado" ? "Molhado" : "Limite");
         stateEl.className = "moisture-state " + (state === "seco" ? "seco" : "molhado");
       }
 
-      document.getElementById("moistAdc").textContent = `ADC: ${adc} · Threshold: ${st.threshold ?? "—"}`;
-      document.getElementById("ip").textContent = st.ip ?? ESP32_FIXED_URL;
+      document.getElementById("moistAdc").textContent = `ADC: ${adc} - Threshold: ${st.threshold ?? "-"}`;
+      document.getElementById("ip").textContent = st.ip ?? "-";
 
       const rssiVal = st.rssi ?? null;
       if (rssiVal !== null) {
@@ -521,7 +495,7 @@
         document.getElementById("signalBars").className = "signal-bars " + q.cls;
       }
 
-      document.getElementById("mode").textContent = st.mode ?? "—";
+      document.getElementById("mode").textContent = st.mode ?? "-";
 
       const relayOn = (typeof st.relayOn === "boolean") ? st.relayOn : false;
       const watering = (typeof st.watering === "boolean") ? st.watering : false;
@@ -533,18 +507,18 @@
       if (watering) banner.classList.add("active");
       else banner.classList.remove("active");
 
-      document.getElementById("uptime").textContent = st.uptimeMs ? msToH(st.uptimeMs) : "—";
+      document.getElementById("uptime").textContent = st.uptimeMs ? msToH(st.uptimeMs) : "-";
 
-      const tr = st.timeReady === true ? "✓" : (st.timeReady === false ? "✗" : "—");
+      const tr = st.timeReady === true ? "✓" : (st.timeReady === false ? "✗" : "-");
       const timeStr = epochToDate(st.epochNow);
       document.getElementById("time").textContent = `${timeStr} ${tr}`;
 
-      document.getElementById("cfgThr").textContent = st.threshold ?? "—";
+      document.getElementById("cfgThr").textContent = st.threshold ?? "-";
       document.getElementById("cfgRead").textContent = msToMinStr(st.readMs);
       document.getElementById("cfgIrr").textContent = msToMinStr(st.irrMs);
-      document.getElementById("cfgStable").textContent = st.stableN ?? "—";
-      document.getElementById("aboveCount").textContent = st.aboveCount ?? "—";
-      document.getElementById("belowCount").textContent = st.belowCount ?? "—";
+      document.getElementById("cfgStable").textContent = st.stableN ?? "-";
+      document.getElementById("aboveCount").textContent = st.aboveCount ?? "-";
+      document.getElementById("belowCount").textContent = st.belowCount ?? "-";
 
       const inThr = document.getElementById("inThr");
       const inStableN = document.getElementById("inStableN");
@@ -561,8 +535,8 @@
       publishCmd({ cmd: "mode", value: m });
     }
 
-    function cmdManual(state){
-      publishCmd({ cmd: "relay", value: Boolean(state) });
+    function cmdManual(v){
+      publishCmd({ cmd: "manual", value: v });
     }
 
     function toFloatMin(id){
@@ -573,8 +547,8 @@
       return v;
     }
 
-    function cmdSetConfig(){
-      const payload = { cmd: "config" };
+    function cmdSet(){
+      const payload = { cmd: "set" };
 
       const thrTxt = (document.getElementById("inThr").value || "").trim();
       if (thrTxt !== "") {
@@ -595,66 +569,28 @@
       if (irrMin != null) payload.irrMs = Math.round(irrMin * 60000);
 
       publishCmd(payload);
-      document.getElementById("cfgMsg").textContent = "✓ Enviado: " + JSON.stringify(payload);
+      document.getElementById("cfgMsg").textContent = "Enviado: " + JSON.stringify(payload);
       setTimeout(() => { document.getElementById("cfgMsg").textContent = ""; }, 4000);
     }
 
-    function normalizeLogItems(lg){
-      if (Array.isArray(lg)) return lg;
-      if (lg && Array.isArray(lg.items)) return lg.items;
-      if (lg && typeof lg === "object") return [lg];
-      return [];
-    }
-
-    function getLogKey(it){
-      return [
-        it.startEpoch ?? it.startLocal ?? "",
-        it.endEpoch ?? it.endLocal ?? "",
-        it.durMs ?? "",
-        it.reason ?? "",
-        it.adcStart ?? "",
-        it.adcEnd ?? ""
-      ].join("|");
-    }
-
     function renderLogsCompat(lg){
-      const incoming = normalizeLogItems(lg);
-
-      if (Array.isArray(lg) || (lg && Array.isArray(lg.items))) {
-        logHistory = incoming.slice(0, 50);
-      } else if (incoming.length === 1) {
-        const newItem = incoming[0];
-        const key = getLogKey(newItem);
-        const exists = logHistory.some(item => getLogKey(item) === key);
-        if (!exists) {
-          logHistory.unshift(newItem);
-          if (logHistory.length > 50) logHistory = logHistory.slice(0, 50);
-        }
-      }
-
       const body = document.getElementById("logsBody");
       body.innerHTML = "";
 
-      if (logHistory.length === 0) {
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:20px">Nenhum registro</td></tr>';
+      const arr = lg && Array.isArray(lg.items) ? lg.items : [];
+
+      if (arr.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:20px">Nenhum registro recebido</td></tr>';
         return;
       }
 
-      logHistory.forEach(it => {
-        const startRaw = it.startLocal ?? it.start ?? it.ini ?? it.startEpoch ?? null;
-        const endRaw = it.endLocal ?? it.end ?? it.fim ?? it.endEpoch ?? null;
-
-        const start = formatLogDate(startRaw);
-        const end = formatLogDate(endRaw);
-
-        let durMs = Number(it.durMs ?? it.dur ?? it.durationMs ?? 0);
-        if (!durMs && it.startEpoch != null && it.endEpoch != null) {
-          durMs = (Number(it.endEpoch) - Number(it.startEpoch)) * 1000;
-        }
-
-        const a0 = it.adcStart ?? it.adc0 ?? it.adcIni ?? "—";
-        const a1 = it.adcEnd ?? it.adc1 ?? it.adcFim ?? "—";
-        const reason = it.reason ?? it.motivo ?? "—";
+      arr.forEach(it => {
+        const start = it.startLocal ?? "-";
+        const end = it.endLocal ?? "-";
+        const durMs = Number(it.durMs ?? 0);
+        const a0 = it.adcStart ?? "-";
+        const a1 = it.adcEnd ?? "-";
+        const reason = it.reason ?? "-";
 
         const tr = document.createElement("tr");
         tr.innerHTML =
