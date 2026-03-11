@@ -254,7 +254,7 @@
     const DEFAULT_PORT = localStorage.getItem(LS.port) || "8884";
     const DEFAULT_PATH = localStorage.getItem(LS.path) || "/mqtt";
     const DEFAULT_USER = localStorage.getItem(LS.user) || "armarcos";
-    const DEFAULT_PASS = localStorage.getItem(LS.pass) || "";
+    const DEFAULT_PASS = localStorage.getItem(LS.pass) || "Ma123456";
 
     document.getElementById("deviceId").value = DEFAULT_DEVICE_ID;
     document.getElementById("host").value = DEFAULT_HOST;
@@ -406,7 +406,7 @@
 
     function connectMqtt(){
       if (typeof mqtt === "undefined") {
-        alert("ERRO: mqtt.js nao carregou.");
+        alert("ERRO: mqtt.js não carregou.");
         return;
       }
 
@@ -486,7 +486,7 @@
 
     function publishCmd(obj){
       if (!client || !client.connected) {
-        alert("MQTT nao conectado.");
+        alert("MQTT não conectado.");
         return;
       }
       const data = JSON.stringify(obj);
